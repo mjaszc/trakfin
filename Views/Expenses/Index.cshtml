@@ -1,10 +1,72 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model Trakfin.Models.BankNameViewModel
+
 @{
-    ViewData["Title"] = "List of Expenses";
+    ViewData["Title"] = "Index";
 }
 
-<h2>My List of Expenses</h2>
+<h1>Index</h1>
 
-<p>Hello from our View Template!</p>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+<form asp-controller="Expenses" asp-action="Index" method="get">
+    <p>
+        <select asp-for="BankName" asp-items="Model.Banks">
+            <option value="">All</option>
+        </select>
+
+        Title: <input type="text" name="SearchString" />
+        <input type="submit" value="Filter" />
+    </p>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Expenses![0].Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Expenses![0].Date)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Expenses![0].Bank)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Expenses![0].Price)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Expenses![0].Note)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Expenses!) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Date)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Bank)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Price)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Note)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
