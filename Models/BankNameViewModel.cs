@@ -8,7 +8,11 @@ namespace Trakfin.Models
         public List<Expense>? Expenses { get; set; }
         public SelectList? Banks { get; set; }
 
+        public SelectList? Categories { get; set; }
+
         public string? BankName { get; set; }
+
+        public string? CategoryName { get; set; }
         public string? SearchString { get; set; }
     }
         

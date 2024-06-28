@@ -23,6 +23,7 @@ namespace Trakfin.Models
                         Date = DateTime.Parse("20.06.2024"),
                         Bank = "Bank of Luxemburg",
                         Price = 250.00M,
+                        Category = "Animals"
                     },
                     new Expense
                     {
@@ -30,7 +31,8 @@ namespace Trakfin.Models
                         Date = DateTime.Parse("22.06.2024"),
                         Bank = "Santander Bank",
                         Price = 300.25M,
-                        Note = "Also I bought snacks for party"
+                        Note = "Also I bought snacks for party",
+                        Category = "Shopping"
                     },
                     new Expense
                     {
@@ -38,7 +40,8 @@ namespace Trakfin.Models
                         Date = DateTime.Parse("24.06.2024"),
                         Bank = "Bank of Ireland",
                         Price = 1500.00M,
-                        Note = "BMW M4 Competition for 3 days"
+                        Note = "BMW M4 Competition for 3 days",
+                        Category = "Cars"
                     }
                 );
                 context.SaveChanges();

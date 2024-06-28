@@ -14,7 +14,11 @@
 <form asp-controller="Expenses" asp-action="Index" method="get">
     <p>
         <select asp-for="BankName" asp-items="Model.Banks">
-            <option value="">All</option>
+            <option value="">Bank Name</option>
+        </select>
+
+        <select asp-for="CategoryName" asp-items="Model.Categories">
+            <option value="">Category</option>
         </select>
 
         Title: <input type="text" name="SearchString" />
@@ -38,6 +42,9 @@
                 @Html.DisplayNameFor(model => model.Expenses![0].Price)
             </th>
             <th>
+                @Html.DisplayNameFor(model => model.Expenses![0].Category)
+            </th>
+            <th>
                 @Html.DisplayNameFor(model => model.Expenses![0].Note)
             </th>
             <th></th>
@@ -57,6 +64,9 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Price)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Category)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Note)

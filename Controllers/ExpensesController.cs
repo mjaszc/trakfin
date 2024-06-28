@@ -20,7 +20,7 @@ namespace Trakfin.Controllers
         }
 
         // GET: Expenses
-        public async Task<IActionResult> Index(string bankName, string searchString)
+        public async Task<IActionResult> Index(string categoryName, string bankName, string searchString)
         {
             if (_context.Expense == null)
             {
@@ -30,6 +30,11 @@ namespace Trakfin.Controllers
             IQueryable<string> bankQuery = from e in _context.Expense
                                            orderby e.Bank
                                            select e.Bank;
+
+            IQueryable<string> categoryQuery = from e in _context.Expense
+                                               orderby e.Category
+                                               select e.Category;
+
             var expenses = from e in _context.Expense
                            select e;
 
@@ -40,13 +45,19 @@ namespace Trakfin.Controllers
 
             if (!String.IsNullOrEmpty(bankName))
             {
-                expenses = expenses.Where(b => b.Bank == bankName);
+                expenses = expenses.Where(x => x.Bank == bankName);
+            }
+
+            if (!String.IsNullOrEmpty(categoryName))
+            {
+                expenses = expenses.Where(z => z.Category == categoryName);
             }
 
             var bankNameVM = new BankNameViewModel
             {
                 Banks = new SelectList(await bankQuery.Distinct().ToListAsync()),
-                Expenses = await expenses.ToListAsync()
+                Expenses = await expenses.ToListAsync(),
+                Categories = new SelectList(await categoryQuery.Distinct().ToListAsync())
             };
 
             return View(bankNameVM);
@@ -87,7 +98,7 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Date,Bank,Price,Note")] Expense expense)
+        public async Task<IActionResult> Create([Bind("Id,Title,Date,Bank,Price,Category,Note")] Expense expense)
         {
             if (ModelState.IsValid)
             {
@@ -119,7 +130,7 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Date,Bank,Price")] Expense expense)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Date,Bank,Category,Price")] Expense expense)
         {
             if (id != expense.Id)
             {

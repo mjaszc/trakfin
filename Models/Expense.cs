@@ -20,6 +20,9 @@ namespace Trakfin.Models
         [DataType(DataType.Currency), Column(TypeName = "decimal(18, 2)")]
         public decimal Price { get; set; }
 
+        [StringLength(60, MinimumLength = 3)]
+        public string?  Category { get; set; }
+
         public string? Note { get; set; }
     }
 }
