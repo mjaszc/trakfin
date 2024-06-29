@@ -1,4 +1,4 @@
-﻿@model Trakfin.Models.BankNameViewModel
+﻿@model Trakfin.Models.ExpenseViewModel
 
 @{
     ViewData["Title"] = "Index";
@@ -21,7 +21,10 @@
             <option value="">Category</option>
         </select>
 
-        Title: <input type="text" name="SearchString" />
+        Date: <input asp-for="Date" type="date" name="Date"/>
+
+        Title: <input asp-for="SearchString" type="text" name="SearchString" />
+
         <input type="submit" value="Filter" />
     </p>
 </form>

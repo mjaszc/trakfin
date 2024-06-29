@@ -20,7 +20,7 @@ namespace Trakfin.Controllers
         }
 
         // GET: Expenses
-        public async Task<IActionResult> Index(string categoryName, string bankName, string searchString)
+        public async Task<IActionResult> Index(string searchString, string bankName, string categoryName, DateTime? date = null)
         {
             if (_context.Expense == null)
             {
@@ -53,11 +53,16 @@ namespace Trakfin.Controllers
                 expenses = expenses.Where(z => z.Category == categoryName);
             }
 
-            var bankNameVM = new BankNameViewModel
+            if (date.HasValue)
             {
-                Banks = new SelectList(await bankQuery.Distinct().ToListAsync()),
+                expenses = expenses.Where(y => EF.Functions.DateDiffDay(y.Date, date.Value) == 0);
+            }
+
+            var bankNameVM = new ExpenseViewModel
+            {
                 Expenses = await expenses.ToListAsync(),
-                Categories = new SelectList(await categoryQuery.Distinct().ToListAsync())
+                Banks = new SelectList(await bankQuery.Distinct().ToListAsync()),
+                Categories = new SelectList(await categoryQuery.Distinct().ToListAsync()),
             };
 
             return View(bankNameVM);
