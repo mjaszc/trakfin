@@ -4,6 +4,38 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Trakfin.Models
 {
+    public enum ExpensePaymentMethod
+    {
+        [Display(Name = "Credit Card")]
+        CreditCard,
+
+        [Display(Name = "Bank Transfer")]
+        BankTransfer,
+
+        [Display(Name = "Apple Pay")]
+        ApplePay,
+
+        PayPal
+    }
+
+    public enum ExpenseRecurring
+    {
+        Daily,
+        Weekly,
+        Montly,
+        Yearly,
+        No
+    }
+
+    public enum ExpenseStatus
+    {
+        Pending,
+        Paid,
+
+        [Display (Name = "Not Paid")]
+        NotPaid
+    }
+
     public class Expense
     {
         public int Id { get; set; }
@@ -23,6 +55,20 @@ namespace Trakfin.Models
         [StringLength(60, MinimumLength = 3)]
         public string?  Category { get; set; }
 
+        [StringLength(250, MinimumLength = 3)]
         public string? Note { get; set; }
+
+        [Display(Name = "Payment Method")]
+        public ExpensePaymentMethod? PaymentMethod { get; set; } = null;
+
+        public ExpenseRecurring? Recurring { get; set; } = null;
+
+        [Display(Name = "Merchant / Vendor")]
+        public string? MerchantOrVendor { get; set; }
+
+        [StringLength(60, MinimumLength = 3)]
+        public string? Tags { get; set; }
+
+        public ExpenseStatus? Status { get; set; } = null;
     }
 }

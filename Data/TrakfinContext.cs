@@ -14,7 +14,7 @@ namespace Trakfin.Data
         {
         }
 
-        public DbSet<Trakfin.Models.Expense> Expense { get; set; } = default!;
+        public DbSet<Trakfin.Models.Expense> Expense { get; set; }
         public DbSet<Trakfin.Models.Subscription> Subscription { get; set; }
     }
 }

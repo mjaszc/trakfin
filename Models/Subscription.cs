@@ -6,7 +6,7 @@ namespace Trakfin.Models
 {
     public enum SubscriptionStatus
     {
-        
+        None,
         Active,
         Paused,
         Canelled
@@ -14,12 +14,16 @@ namespace Trakfin.Models
 
     public enum SubscriptionPaymentMethod
     {
+        None,
         [Display(Name = "Credit Card")]
         CreditCard,
+
         [Display(Name = "Bank Transfer")]
         BankTransfer,
+
         [Display(Name = "Apple Pay")]
         ApplePay,
+
         PayPal
     }
 
@@ -48,10 +52,10 @@ namespace Trakfin.Models
         [DataType(DataType.Date), Required]
         public DateTime? NextBillingDate { get; set; }
 
-        public SubscriptionStatus Status { get; set; }
+        public SubscriptionStatus? Status { get; set; } = null;
 
         [Display(Name = "Payment Method")]
-        public SubscriptionPaymentMethod PaymentMethod { get; set; }
+        public SubscriptionPaymentMethod? PaymentMethod { get; set; } = null;
 
         // public string? Notifications // ADD THAT COLUMN AFTER IMPLEMENTING NOTIFICATIONS
 
