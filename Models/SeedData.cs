@@ -1,5 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.DotNet.Scaffolding.Shared;
+using Microsoft.EntityFrameworkCore;
 using Trakfin.Data;
+using Trakfin.Migrations;
+using static Azure.Core.HttpHeader;
 
 namespace Trakfin.Models
 {
@@ -11,8 +14,7 @@ namespace Trakfin.Models
                 serviceProvider.GetRequiredService<
                     DbContextOptions<TrakfinContext>>()))
             {
-                // Look for any expenses
-                if (context.Expense.Any())
+                if (context.Expense.Any())  
                 {
                     return; // DB has been seeded
                 }
@@ -23,7 +25,10 @@ namespace Trakfin.Models
                         Date = DateTime.Parse("20.06.2024"),
                         Bank = "Bank of Luxemburg",
                         Price = 250.00M,
-                        Category = "Animals"
+                        Category = "Animals",
+                        Recurring = ExpenseRecurring.Monthly,
+                        Tags = "Vet, Animal Health",
+                        Status = ExpenseStatus.Pending,
                     },
                     new Expense
                     {
@@ -32,7 +37,12 @@ namespace Trakfin.Models
                         Bank = "Santander Bank",
                         Price = 300.25M,
                         Note = "Also I bought snacks for party",
-                        Category = "Shopping"
+                        Category = "Shopping",
+                        PaymentMethod = ExpensePaymentMethod.ApplePay,
+                        Recurring = ExpenseRecurring.Daily,
+                        MerchantOrVendor = "Walmart",
+                        Tags = "Party, Grocery",
+                        Status = ExpenseStatus.Paid,
                     },
                     new Expense
                     {
@@ -41,9 +51,70 @@ namespace Trakfin.Models
                         Bank = "Bank of Ireland",
                         Price = 1500.00M,
                         Note = "BMW M4 Competition for 3 days",
-                        Category = "Cars"
+                        Category = "Cars",
+                        PaymentMethod = ExpensePaymentMethod.CreditCard,
+                        Recurring = ExpenseRecurring.Monthly,
+                        MerchantOrVendor = "Warsaw Rental Centre",
+                        Tags = "Cars",
+                        Status = ExpenseStatus.NotPaid,
                     }
                 );
+
+                
+                context.Subscription.AddRange(
+                    new Subscription
+                    {
+                        Name = "Netflix",
+                        Category = "Streaming",
+                        Price = 15.99M,
+                        BillingCycle = SubscriptionBillingCycle.Monthly,
+                        StartDate = DateTime.Parse("30.06.2024"),
+                        NextBillingDate = DateTime.Parse("30.07.2024"),
+                        Status = SubscriptionStatus.Active,
+                        PaymentMethod = SubscriptionPaymentMethod.PayPal,
+                        CancellationPolicy = SubscriptionCancellationPolicy.WebsitePortal,
+                        Notes = "Family Subscription",
+                        Provider = "Netflix, Inc.",
+                        User = "test_user",
+                        Duration = "6 months",
+                        Discount = "Student discount -10%"
+                    },
+                    new Subscription
+                    {
+                        Name = "Adobe Photoshop",
+                        Category = "Software",
+                        Price = 20.99M,
+                        BillingCycle = SubscriptionBillingCycle.Monthly,
+                        StartDate = DateTime.Parse("1.07.2024"),
+                        NextBillingDate = DateTime.Parse("1.08.2024"),
+                        Status = SubscriptionStatus.Active,
+                        PaymentMethod = SubscriptionPaymentMethod.CreditCard,
+                        CancellationPolicy = SubscriptionCancellationPolicy.FeedbackAndCancellationSurvey,
+                        Notes = "For professional use",
+                        Provider = "Adobe",
+                        User = "hellouser",
+                        Duration = "1 year",
+                        Discount = "None"
+                    },
+                    new Subscription
+                    {
+                        Name = "NY Times",
+                        Category = "Software",
+                        Price = 5.00M,
+                        BillingCycle = SubscriptionBillingCycle.Monthly,
+                        StartDate = DateTime.Parse("2.07.2024"),
+                        NextBillingDate = DateTime.Parse("2.08.2024"),
+                        Status = SubscriptionStatus.Active,
+                        PaymentMethod = SubscriptionPaymentMethod.CreditCard,
+                        CancellationPolicy = SubscriptionCancellationPolicy.InApp,
+                        Notes = "Digital access only",
+                        Provider = "NY Times",
+                        User = "john_doe11",
+                        Duration = "1 month",
+                        Discount = "Introductory offer"
+                    }
+                );
+
                 context.SaveChanges();
             }
         }

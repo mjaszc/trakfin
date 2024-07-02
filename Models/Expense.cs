@@ -22,7 +22,7 @@ namespace Trakfin.Models
     {
         Daily,
         Weekly,
-        Montly,
+        Monthly,
         Yearly,
         No
     }

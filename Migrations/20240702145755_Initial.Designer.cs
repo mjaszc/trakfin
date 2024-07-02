@@ -12,8 +12,8 @@ using Trakfin.Data;
 namespace Trakfin.Migrations
 {
     [DbContext(typeof(TrakfinContext))]
-    [Migration("20240701061704_SubscriptionEnum")]
-    partial class SubscriptionEnum
+    [Migration("20240702145755_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -44,11 +44,28 @@ namespace Trakfin.Migrations
                     b.Property<DateTime?>("Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Note")
+                    b.Property<string>("MerchantOrVendor")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<int?>("PaymentMethod")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18, 2)");
+
+                    b.Property<int?>("Recurring")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -68,14 +85,11 @@ namespace Trakfin.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BillingCycle")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                    b.Property<int?>("BillingCycle")
+                        .HasColumnType("int");
 
-                    b.Property<string>("CancellationPolicy")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                    b.Property<int?>("CancellationPolicy")
+                        .HasColumnType("int");
 
                     b.Property<string>("Category")
                         .HasMaxLength(100)
@@ -102,7 +116,7 @@ namespace Trakfin.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
-                    b.Property<int>("PaymentMethod")
+                    b.Property<int?>("PaymentMethod")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
@@ -116,8 +130,7 @@ namespace Trakfin.Migrations
                         .IsRequired()
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Status")
-                        .HasMaxLength(10)
+                    b.Property<int?>("Status")
                         .HasColumnType("int");
 
                     b.Property<string>("User")

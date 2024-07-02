@@ -6,7 +6,6 @@ namespace Trakfin.Models
 {
     public enum SubscriptionStatus
     {
-        None,
         Active,
         Paused,
         Canelled
@@ -14,7 +13,6 @@ namespace Trakfin.Models
 
     public enum SubscriptionPaymentMethod
     {
-        None,
         [Display(Name = "Credit Card")]
         CreditCard,
 
@@ -25,6 +23,38 @@ namespace Trakfin.Models
         ApplePay,
 
         PayPal
+    }
+
+    public enum SubscriptionBillingCycle
+    {
+        Daily,
+        Weekly,
+        Monthly,
+        Yearly
+    }
+
+    public enum SubscriptionCancellationPolicy
+    {
+        [Display(Name = "In App Cancellation")]
+        InApp,
+
+        [Display(Name = "Website Portal")]
+        WebsitePortal,
+
+        [Display(Name = "Customer Support Request")]
+        CustomerSupportRequest,
+
+        [Display(Name = "App Store Cancellation")]
+        AppStore,
+
+        [Display(Name = "Automatic Renewal Disable")]
+        AutomaticRenewal,
+
+        [Display(Name = "Grace Period and Refund Policy")]
+        GracePeriodAndRefundPolicy,
+
+        [Display(Name = "Feedback and Cancellation Survey")]
+        FeedbackAndCancellationSurvey,
     }
 
     public class Subscription
@@ -41,8 +71,7 @@ namespace Trakfin.Models
         public decimal Price { get; set; }
 
         [Display(Name = "Billing Cycle")]
-        [StringLength(10, MinimumLength = 1), Required]
-        public string? BillingCycle { get; set; }
+        public SubscriptionBillingCycle? BillingCycle { get; set; } = null;
 
         [Display(Name = "Start Date")]
         [DataType(DataType.Date), Required]
@@ -60,8 +89,7 @@ namespace Trakfin.Models
         // public string? Notifications // ADD THAT COLUMN AFTER IMPLEMENTING NOTIFICATIONS
 
         [Display(Name = "Cancellation Policy")]
-        [StringLength(20, MinimumLength = 3)]
-        public string? CancellationPolicy { get; set; }
+        public SubscriptionCancellationPolicy? CancellationPolicy { get; set; } = null;
 
         [StringLength(250, MinimumLength = 3)]
         public string? Notes { get; set; }
