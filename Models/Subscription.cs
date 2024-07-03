@@ -73,12 +73,10 @@ namespace Trakfin.Models
         [Display(Name = "Billing Cycle")]
         public SubscriptionBillingCycle? BillingCycle { get; set; } = null;
 
-        [Display(Name = "Start Date")]
-        [DataType(DataType.Date), Required]
+        [Display(Name = "Start Date"), DataType(DataType.Date), Required]
         public DateTime? StartDate { get; set; }
 
-        [Display(Name = "Next Billing Date")]
-        [DataType(DataType.Date), Required]
+        [Display(Name = "Next Billing Date"), DataType(DataType.Date), Required]
         public DateTime? NextBillingDate { get; set; }
 
         public SubscriptionStatus? Status { get; set; } = null;

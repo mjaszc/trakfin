@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Trakfin.Data;
 using Trakfin.Models;
 
-var builder = WebApplication.CreateBuilder(args);
+ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<TrakfinContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("TrakfinContext") ?? throw new InvalidOperationException("Connection string 'TrakfinContext' not found.")));
 
