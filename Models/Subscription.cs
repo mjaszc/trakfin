@@ -27,6 +27,7 @@ namespace Trakfin.Models
 
     public enum SubscriptionBillingCycle
     {
+        None = 0,
         Daily,
         Weekly,
         Monthly,
