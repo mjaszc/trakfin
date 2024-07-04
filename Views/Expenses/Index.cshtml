@@ -33,10 +33,11 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Expenses![0].Title)
+                <a asp-action="Index" asp-route-sortOrder="@ViewData["TitleSortParm"]">@Html.DisplayNameFor(model => model.Expenses![0].Title)</a>
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Expenses![0].Date)
+                
+                <a asp-action="Index" asp-route-sortOrder="@ViewData["DateSortParm"]">@Html.DisplayNameFor(model => model.Expenses![0].Date)</a>
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Expenses![0].Bank)

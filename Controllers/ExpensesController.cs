@@ -20,7 +20,7 @@ namespace Trakfin.Controllers
         }
 
         // GET: Expenses
-        public async Task<IActionResult> Index(string searchString, string bankName, string categoryName, DateTime? date = null)
+        public async Task<IActionResult> Index(string searchString, string bankName, string categoryName, string sortOrder, DateTime? date = null)
         {
             if (_context.Expense == null)
             {
@@ -56,6 +56,29 @@ namespace Trakfin.Controllers
             if (date.HasValue)
             {
                 expenses = expenses.Where(y => EF.Functions.DateDiffDay(y.Date, date.Value) == 0);
+            }
+
+            ViewData["TitleSortParm"] = sortOrder == "Title" ? "Title_desc" : "Title";
+            ViewData["DateSortParm"] = sortOrder == "Date" ? "Date_desc" : "Date";
+            // ViewData["BankSortParm"] = 
+
+            switch (sortOrder)
+            {
+                case "Title":
+                    expenses = expenses.OrderBy(e => e.Title);
+                    break;
+                case "Title_desc":
+                    expenses = expenses.OrderByDescending(e => e.Title);
+                    break;
+                case "Date":
+                    expenses = expenses.OrderBy(e => e.Date);
+                    break;
+                case "Date_desc":
+                    expenses = expenses.OrderByDescending(e => e.Date);
+                    break;
+                default:
+                    expenses = expenses.OrderBy(e => e.Id);
+                    break;
             }
 
             var bankNameVM = new ExpenseViewModel
