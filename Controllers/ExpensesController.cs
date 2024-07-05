@@ -27,20 +27,42 @@ namespace Trakfin.Controllers
                 return Problem("Entity set 'Trakfin.Expense' is null.");
             }
 
-            IQueryable<string> bankQuery = from e in _context.Expense
-                                           orderby e.Bank
-                                           select e.Bank;
+            var bankQuery = GetBankQuery();
+            var categoryQuery = GetCategoryQuery();
+            var expenses = FilterExpenses(searchString, bankName, categoryName, date);
+            expenses = SortExpenses(expenses, sortOrder);
 
-            IQueryable<string> categoryQuery = from e in _context.Expense
-                                               orderby e.Category
-                                               select e.Category;
+            var bankNameVM = new ExpenseViewModel
+            {
+                Expenses = await expenses.ToListAsync(),
+                Banks = new SelectList(await bankQuery.Distinct().ToListAsync()),
+                Categories = new SelectList(await categoryQuery.Distinct().ToListAsync()),
+            };
 
-            var expenses = from e in _context.Expense
-                           select e;
+            return View(bankNameVM);
+        }
+
+        private IQueryable<string> GetCategoryQuery() =>
+              from e in _context.Expense
+              orderby e.Category
+              select e.Category;
+
+        private IQueryable<string> GetBankQuery() =>
+             from e in _context.Expense
+             orderby e.Bank
+             select e.Bank;
+
+        private IQueryable<Expense> GetExpenseQuery() =>
+            from e in _context.Expense
+            select e;
+
+        private IQueryable<Expense> FilterExpenses(string searchString, string bankName, string categoryName, DateTime? date = null)
+        {
+            var expenses = GetExpenseQuery();
 
             if (!String.IsNullOrEmpty(searchString))
             {
-                expenses = expenses.Where(s => s.Title!.Contains(searchString));
+                expenses = expenses.Where(s => s.Title != null && s.Title.Contains(searchString));
             }
 
             if (!String.IsNullOrEmpty(bankName))
@@ -58,37 +80,22 @@ namespace Trakfin.Controllers
                 expenses = expenses.Where(y => EF.Functions.DateDiffDay(y.Date, date.Value) == 0);
             }
 
+            return expenses;
+        }
+
+        private IQueryable<Expense> SortExpenses(IQueryable<Expense> expenses, string sortOrder)
+        {
             ViewData["TitleSortParm"] = sortOrder == "Title" ? "Title_desc" : "Title";
             ViewData["DateSortParm"] = sortOrder == "Date" ? "Date_desc" : "Date";
-            // ViewData["BankSortParm"] = 
 
-            switch (sortOrder)
+            return sortOrder switch
             {
-                case "Title":
-                    expenses = expenses.OrderBy(e => e.Title);
-                    break;
-                case "Title_desc":
-                    expenses = expenses.OrderByDescending(e => e.Title);
-                    break;
-                case "Date":
-                    expenses = expenses.OrderBy(e => e.Date);
-                    break;
-                case "Date_desc":
-                    expenses = expenses.OrderByDescending(e => e.Date);
-                    break;
-                default:
-                    expenses = expenses.OrderBy(e => e.Id);
-                    break;
-            }
-
-            var bankNameVM = new ExpenseViewModel
-            {
-                Expenses = await expenses.ToListAsync(),
-                Banks = new SelectList(await bankQuery.Distinct().ToListAsync()),
-                Categories = new SelectList(await categoryQuery.Distinct().ToListAsync()),
+                "Title" => expenses.OrderBy(e => e.Title),
+                "Title_desc" => expenses.OrderByDescending(e => e.Title),
+                "Date" => expenses.OrderBy(e => e.Date),
+                "Date_desc" => expenses.OrderByDescending(e => e.Date),
+                _ => expenses.OrderBy(e => e.Id),
             };
-
-            return View(bankNameVM);
         }
 
         [HttpPost]
