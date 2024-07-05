@@ -21,11 +21,14 @@
             <option value="">Category</option>
         </select>
 
-        Date: <input asp-for="Date" type="date" name="Date" />
+        Date: <input asp-for="StartDate" type="date" name="StartDate" />
+        Date: <input asp-for="EndDate" type="date" name="EndDate" />
 
         Title: <input asp-for="SearchString" type="text" name="SearchString" />
 
         <input type="submit" value="Filter" />
+
+        <a asp-area="" asp-controller="Expenses" asp-action="Index">Clear all filters</a>
     </p>
 </form>
 

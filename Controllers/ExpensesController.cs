@@ -20,7 +20,7 @@ namespace Trakfin.Controllers
         }
 
         // GET: Expenses
-        public async Task<IActionResult> Index(string searchString, string bankName, string categoryName, string sortOrder, DateTime? date = null)
+        public async Task<IActionResult> Index(string searchString, string bankName, string categoryName, string sortOrder, DateTime? startDate, DateTime? endDate)
         {
             if (_context.Expense == null)
             {
@@ -29,7 +29,7 @@ namespace Trakfin.Controllers
 
             var bankQuery = GetBankQuery();
             var categoryQuery = GetCategoryQuery();
-            var expenses = FilterExpenses(searchString, bankName, categoryName, date);
+            var expenses = FilterExpenses(searchString, bankName, categoryName, startDate, endDate);
             expenses = SortExpenses(expenses, sortOrder);
 
             var bankNameVM = new ExpenseViewModel
@@ -56,7 +56,7 @@ namespace Trakfin.Controllers
             from e in _context.Expense
             select e;
 
-        private IQueryable<Expense> FilterExpenses(string searchString, string bankName, string categoryName, DateTime? date = null)
+        private IQueryable<Expense> FilterExpenses(string searchString, string bankName, string categoryName, DateTime? startDate, DateTime? endDate)
         {
             var expenses = GetExpenseQuery();
 
@@ -75,9 +75,14 @@ namespace Trakfin.Controllers
                 expenses = expenses.Where(z => z.Category == categoryName);
             }
 
-            if (date.HasValue)
+            if (startDate.HasValue)
             {
-                expenses = expenses.Where(y => EF.Functions.DateDiffDay(y.Date, date.Value) == 0);
+                expenses = expenses.Where(x => x.Date >= startDate);
+            }
+
+            if (endDate.HasValue)
+            {
+                expenses = expenses.Where(x => x.Date <= endDate);
             }
 
             return expenses;

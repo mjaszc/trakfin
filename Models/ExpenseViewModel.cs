@@ -13,8 +13,8 @@ namespace Trakfin.Models
         public string? SearchString { get; set; }
         public string? BankName { get; set; }
         public string? CategoryName { get; set; }
-        public DateTime? Date { get; set; }
-        
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
     }
         
 }
