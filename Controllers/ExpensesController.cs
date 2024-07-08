@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Trakfin.Data;
@@ -22,19 +18,16 @@ namespace Trakfin.Controllers
         // GET: Expenses
         public async Task<IActionResult> Index(string searchString, string bankName, string categoryName, string sortOrder, DateTime? startDate, DateTime? endDate)
         {
-            if (_context.Expense == null)
-            {
-                return Problem("Entity set 'Trakfin.Expense' is null.");
-            }
-
-            var bankQuery = GetBankQuery();
-            var categoryQuery = GetCategoryQuery();
+            var bankQuery = GetBank();
+            var categoryQuery = GetCategory();
             var expenses = FilterExpenses(searchString, bankName, categoryName, startDate, endDate);
+            var recurringTransactions = GetRecurringTransactions();
             expenses = SortExpenses(expenses, sortOrder);
 
             var bankNameVM = new ExpenseViewModel
             {
                 Expenses = await expenses.ToListAsync(),
+                RecurringTransactions = await recurringTransactions.ToListAsync(),
                 Banks = new SelectList(await bankQuery.Distinct().ToListAsync()),
                 Categories = new SelectList(await categoryQuery.Distinct().ToListAsync()),
             };
@@ -42,23 +35,30 @@ namespace Trakfin.Controllers
             return View(bankNameVM);
         }
 
-        private IQueryable<string> GetCategoryQuery() =>
+        private IQueryable<string> GetCategory() =>
               from e in _context.Expense
+              where e.Category != null
               orderby e.Category
               select e.Category;
 
-        private IQueryable<string> GetBankQuery() =>
+        private IQueryable<string> GetBank() =>
              from e in _context.Expense
+             where e.Bank != null
              orderby e.Bank
              select e.Bank;
 
-        private IQueryable<Expense> GetExpenseQuery() =>
+        private IQueryable<Expense> GetExpense() =>
             from e in _context.Expense
+            select e;
+
+        private IQueryable<Expense> GetRecurringTransactions() =>
+            from e in _context.Expense
+            where e.Recurring == ExpenseRecurring.Yes
             select e;
 
         private IQueryable<Expense> FilterExpenses(string searchString, string bankName, string categoryName, DateTime? startDate, DateTime? endDate)
         {
-            var expenses = GetExpenseQuery();
+            var expenses = GetExpense();
 
             if (!String.IsNullOrEmpty(searchString))
             {
@@ -128,9 +128,20 @@ namespace Trakfin.Controllers
         }
 
         // GET: Expenses/Create
-        public IActionResult Create()
+        public IActionResult Create(string title = "", decimal price = 0, string bank = "", string category = "")
         {
-            return View();
+            // Arguments are passed from Recurring Transaction "Add Transaction" anchor tag,
+            // and it is pre-filling the values in the Create Expense page
+            var model = new Expense
+            {
+                Title = title,
+                Price = price,
+                Bank = bank,
+                Category = category,
+                Date = DateTime.Now
+            };
+
+            return View(model);
         }
 
         // POST: Expenses/Create

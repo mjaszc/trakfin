@@ -3,6 +3,12 @@
 
 // Write your JavaScript code.
 
+document.querySelectorAll('table tbody tr td a').forEach(row => {
+    row.addEventListener('click', function () {
+        window.location.href = this.dataset.url;
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function () {
     var startDateInput = document.querySelector('.addTimeInterval');
     var billingCycleType = document.querySelector('.billingCycleType');

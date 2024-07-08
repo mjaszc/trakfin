@@ -26,7 +26,7 @@ namespace Trakfin.Models
                         Bank = "Bank of Luxemburg",
                         Price = 250.00M,
                         Category = "Animals",
-                        Recurring = ExpenseRecurring.Monthly,
+                        Recurring = ExpenseRecurring.Yes,
                         Tags = "Vet, Animal Health",
                         Status = ExpenseStatus.Pending,
                     },
@@ -39,7 +39,7 @@ namespace Trakfin.Models
                         Note = "Also I bought snacks for party",
                         Category = "Shopping",
                         PaymentMethod = ExpensePaymentMethod.ApplePay,
-                        Recurring = ExpenseRecurring.Daily,
+                        Recurring = ExpenseRecurring.No,
                         MerchantOrVendor = "Walmart",
                         Tags = "Party, Grocery",
                         Status = ExpenseStatus.Paid,
@@ -53,14 +53,17 @@ namespace Trakfin.Models
                         Note = "BMW M4 Competition for 3 days",
                         Category = "Cars",
                         PaymentMethod = ExpensePaymentMethod.CreditCard,
-                        Recurring = ExpenseRecurring.Monthly,
                         MerchantOrVendor = "Warsaw Rental Centre",
                         Tags = "Cars",
                         Status = ExpenseStatus.NotPaid,
                     }
                 );
 
-                
+                if (context.Subscription.Any())
+                {
+                    return; // DB has been seeded
+                }
+
                 context.Subscription.AddRange(
                     new Subscription
                     {

@@ -21,8 +21,8 @@
             <option value="">Category</option>
         </select>
 
-        Date: <input asp-for="StartDate" type="date" name="StartDate" />
-        Date: <input asp-for="EndDate" type="date" name="EndDate" />
+        Start Date: <input asp-for="StartDate" type="date" name="StartDate" />
+        End Date: <input asp-for="EndDate" type="date" name="EndDate" />
 
         Title: <input asp-for="SearchString" type="text" name="SearchString" />
 
@@ -32,6 +32,39 @@
     </p>
 </form>
 
+<h2>Recurring Transactions</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Amount</th>
+            <th>Bank</th>
+            <th>Category</th>
+            <th>Payment Method</th>
+            <!-- Add other columns as needed -->
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.RecurringTransactions != null)
+        {
+            foreach (var expense in Model.RecurringTransactions)
+            {
+                <tr >
+                    <td>@expense.Title</td>
+                    <td>@expense.Price</td>
+                    <td>@expense.Bank</td>
+                    <td>@expense.Category</td>
+                    <td>@expense.PaymentMethod</td>
+                    <td>
+                        <a data-url="@Url.Action("Create", "Expenses", new { id = expense.Id, title = expense.Title, price = expense.Price, bank = expense.Bank, category = expense.Category, paymentMethod = expense.PaymentMethod })">Add transaction</a>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
 <table class="table">
     <thead>
         <tr>
@@ -39,7 +72,7 @@
                 <a asp-action="Index" asp-route-sortOrder="@ViewData["TitleSortParm"]">@Html.DisplayNameFor(model => model.Expenses![0].Title)</a>
             </th>
             <th>
-                
+
                 <a asp-action="Index" asp-route-sortOrder="@ViewData["DateSortParm"]">@Html.DisplayNameFor(model => model.Expenses![0].Date)</a>
             </th>
             <th>

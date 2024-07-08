@@ -20,10 +20,7 @@ namespace Trakfin.Models
 
     public enum ExpenseRecurring
     {
-        Daily,
-        Weekly,
-        Monthly,
-        Yearly,
+        Yes,
         No
     }
 
@@ -53,7 +50,7 @@ namespace Trakfin.Models
         public decimal Price { get; set; }
 
         [StringLength(60, MinimumLength = 3)]
-        public string?  Category { get; set; }
+        public string? Category { get; set; }
 
         [StringLength(250, MinimumLength = 3)]
         public string? Note { get; set; }

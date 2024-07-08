@@ -6,6 +6,7 @@ namespace Trakfin.Models
     public class ExpenseViewModel
     {
         public List<Expense>? Expenses { get; set; }
+        public List<Expense>? RecurringTransactions { get; set; }
         public SelectList? Banks { get; set; }
         public SelectList? Categories { get; set; }
         public List<Expense>? Dates { get; set; }
