@@ -32,21 +32,23 @@
     </p>
 </form>
 
-<h2>Recurring Transactions</h2>
 
-<table>
-    <thead>
+@if (Model.RecurringTransactions != null && Model.RecurringTransactions.Any())
+{
+    <h2>Recurring Transactions</h2>
+
+    <table>
+        <thead>
         <tr>
             <th>Title</th>
             <th>Amount</th>
             <th>Bank</th>
             <th>Category</th>
             <th>Payment Method</th>
-            <!-- Add other columns as needed -->
         </tr>
-    </thead>
-    <tbody>
-        @if (Model.RecurringTransactions != null)
+        </thead>
+        <tbody>
+            @if (Model.RecurringTransactions != null)
         {
             foreach (var expense in Model.RecurringTransactions)
             {
@@ -57,13 +59,14 @@
                     <td>@expense.Category</td>
                     <td>@expense.PaymentMethod</td>
                     <td>
-                        <a class="addRecurring" href="@Url.Action("Create", "Expenses", new {title = expense.Title, price = expense.Price, bank = expense.Bank, category = expense.Category, paymentMethod = expense.PaymentMethod })">Add transaction</a>
+                        <a class="addRecurring" href="@Url.Action("Create", "Expenses", new { title = expense.Title, price = expense.Price, bank = expense.Bank, category = expense.Category, paymentMethod = expense.PaymentMethod, recurring = expense.Recurring })">Add transaction</a>
                     </td>
                 </tr>
             }
         }
-    </tbody>
-</table>
+        </tbody>
+    </table>
+}
 
 <table class="table">
     <thead>

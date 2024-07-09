@@ -50,11 +50,16 @@ namespace Trakfin.Controllers
         private IQueryable<Expense> GetExpense() =>
             from e in _context.Expense
             select e;
-
         private IQueryable<Expense> GetRecurringTransactions() =>
-            from e in _context.Expense
-            where e.Recurring == ExpenseRecurring.Yes
-            select e;
+            (from e in _context.Expense
+                where e.Recurring == ExpenseRecurring.Yes
+                /*
+                    It displays only the FIRST result that contains the same properties
+                    defined in curly braces to avoid duplication when recurring transactions
+                    are displayed
+                */
+                group e by new { e.Title, e.Price, e.Category, e.Bank } into x
+                select x.FirstOrDefault());
 
         private IQueryable<Expense> FilterExpenses(string searchString, string bankName, string categoryName, DateTime? startDate, DateTime? endDate)
         {
@@ -128,7 +133,7 @@ namespace Trakfin.Controllers
         }
 
         // GET: Expenses/Create
-        public IActionResult Create(string title = "", decimal price = 0, string bank = "", string category = "", ExpensePaymentMethod? paymentMethod = null)
+        public IActionResult Create(string title = "", decimal price = 0, string bank = "", string category = "", ExpensePaymentMethod? paymentMethod = null, ExpenseRecurring? recurring = null)
         {
             // Arguments are passed from Recurring Transaction "Add Transaction" anchor tag,
             // and it is pre-filling the values in the Create Expense page
@@ -139,7 +144,8 @@ namespace Trakfin.Controllers
                 Bank = bank,
                 Category = category,
                 PaymentMethod = paymentMethod,
-                Date = DateTime.Now
+                Date = DateTime.Now,
+                Recurring = recurring
             };
 
             return View(model);
@@ -150,7 +156,7 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Date,Bank,Price,Category,Note")] Expense expense)
+        public async Task<IActionResult> Create([Bind("Id,Title,Date,Bank,Price,Category,Note,PaymentMethod,Recurring,MerchantOrVendor,Tags,Status")] Expense expense)
         {
             if (ModelState.IsValid)
             {
