@@ -3,9 +3,13 @@
 
 // Write your JavaScript code.
 
-document.querySelector('.addRecurring').addEventListener('click', function () {
-    window.location.href = this.dataset.url;
-});
+var addRecurringElement = document.querySelector('.addRecurring');
+
+if (addRecurringElement) {
+    addRecurringElement.addEventListener('click', function () {
+        window.location.href = this.dataset.url;
+    });
+}
 
 document.addEventListener('DOMContentLoaded', function () {
     var startDateInput = document.querySelector('.addTimeInterval');
@@ -14,10 +18,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateNextBillingDate() {
         var startDateValue = startDateInput.value;
-        if (!startDateValue || !billingCycleTypeValue) {
-            alert("Start Date or Billing Cycle Type is not set.");
-            return;
-        }
 
         const startDate = new Date(`${startDateValue}`);
         switch (billingCycleTypeValue) {
@@ -45,7 +45,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (billingCycleType) {
         billingCycleType.addEventListener('change', function () {
             billingCycleTypeValue = this.options[this.selectedIndex].text;
-            // console.log(billingCycleTypeValue);
             updateNextBillingDate();
         });
     }
