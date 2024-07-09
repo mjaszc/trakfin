@@ -21,7 +21,7 @@ namespace Trakfin.Controllers
             var bankQuery = GetBank();
             var categoryQuery = GetCategory();
             var expenses = FilterExpenses(searchString, bankName, categoryName, startDate, endDate);
-            var recurringTransactions = GetRecurringTransactions();
+            var recurringTransactions = FilterRecurringTransactions(searchString, bankName, categoryName);
             expenses = SortExpenses(expenses, sortOrder);
 
             var bankNameVM = new ExpenseViewModel
@@ -51,15 +51,15 @@ namespace Trakfin.Controllers
             from e in _context.Expense
             select e;
         private IQueryable<Expense> GetRecurringTransactions() =>
-            (from e in _context.Expense
-                where e.Recurring == ExpenseRecurring.Yes
-                /*
-                    It displays only the FIRST result that contains the same properties
-                    defined in curly braces to avoid duplication when recurring transactions
-                    are displayed
-                */
-                group e by new { e.Title, e.Price, e.Category, e.Bank } into x
-                select x.FirstOrDefault());
+            from e in _context.Expense
+            where e.Recurring == ExpenseRecurring.Yes
+            /*
+                It displays only the FIRST result that contains the same properties
+                defined in curly braces to avoid duplication when recurring transactions
+                are displayed
+            */
+            group e by new { e.Title, e.Price, e.Category, e.Bank } into x
+            select x.FirstOrDefault();
 
         private IQueryable<Expense> FilterExpenses(string searchString, string bankName, string categoryName, DateTime? startDate, DateTime? endDate)
         {
@@ -106,6 +106,41 @@ namespace Trakfin.Controllers
                 "Date_desc" => expenses.OrderByDescending(e => e.Date),
                 _ => expenses.OrderBy(e => e.Id),
             };
+        }
+
+        /*
+            It is responsible for displaying recurring transaction,
+            depending on whether the selected filters fit the recurring transaction properties
+
+            If yes, alongside with filtered expenses, also above it displays recurring transactions
+            with matching one or more than one property
+        */
+        private IQueryable<Expense> FilterRecurringTransactions(string searchString, string bankName, string categoryName)
+        {
+            var expenses = GetExpense();
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                expenses = expenses.Where(s => s.Title != null && s.Title.Contains(searchString) && s.Recurring == ExpenseRecurring.Yes);
+            }
+
+            if (!String.IsNullOrEmpty(bankName))
+            {
+                expenses = expenses.Where(x => x.Bank == bankName && x.Recurring == ExpenseRecurring.Yes);
+            }
+
+            if (!String.IsNullOrEmpty(categoryName))
+            {
+                expenses = expenses.Where(z => z.Category == categoryName && z.Recurring == ExpenseRecurring.Yes);
+            }
+
+            // If all arguments are null
+            if (String.IsNullOrEmpty(searchString) && String.IsNullOrEmpty(bankName) && String.IsNullOrEmpty(categoryName))
+            {
+                expenses = GetRecurringTransactions();
+            }
+
+            return expenses;
         }
 
         [HttpPost]
