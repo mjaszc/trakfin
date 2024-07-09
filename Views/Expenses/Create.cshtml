@@ -33,23 +33,18 @@
                 <span asp-validation-for="Price" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Price" class="control-label"></label>
-                <input asp-for="Price" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
-            </div>
-            <div class="form-group">
                 <label asp-for="Note" class="control-label"></label>
                 <input asp-for="Note" class="form-control" />
                 <span asp-validation-for="Note" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="PaymentMethod" class="control-label"></label>
-                <select asp-for="PaymentMethod" class="form-control" asp-items="@Html.GetEnumSelectList<ExpensePaymentMethod>()"></select>
+                <select asp-for="PaymentMethod" class="form-control" asp-items="@(new SelectList(Enum.GetValues(typeof(Trakfin.Models.ExpensePaymentMethod)), "").Prepend(new SelectListItem { Text = "", Value = "" }))"></select>
                 <span asp-validation-for="PaymentMethod" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Recurring" class="control-label"></label>
-                <select asp-for="Recurring" class="form-control" asp-items="@Html.GetEnumSelectList<ExpenseRecurring>()"></select>
+                <select asp-for="Recurring" class="form-control" asp-items="@(new SelectList(Enum.GetValues(typeof(Trakfin.Models.ExpenseRecurring)), "").Prepend(new SelectListItem{Text = "", Value = ""}))"></select>
                 <span asp-validation-for="Recurring" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -63,9 +58,9 @@
                 <span asp-validation-for="Tags" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Recurring" class="control-label"></label>
-                <select asp-for="Recurring" class="form-control" asp-items="@Html.GetEnumSelectList<ExpenseStatus>()"></select>
-                <span asp-validation-for="Recurring" class="text-danger"></span>
+                <label asp-for="Status" class="control-label"></label>
+                <select asp-for="Status" class="form-control" asp-items="@(new SelectList(Enum.GetValues(typeof(Trakfin.Models.ExpenseStatus)), "").Prepend(new SelectListItem{Text = "", Value = ""}))"></select>
+                <span asp-validation-for="Status" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />

@@ -57,7 +57,7 @@
                     <td>@expense.Category</td>
                     <td>@expense.PaymentMethod</td>
                     <td>
-                        <a data-url="@Url.Action("Create", "Expenses", new { id = expense.Id, title = expense.Title, price = expense.Price, bank = expense.Bank, category = expense.Category, paymentMethod = expense.PaymentMethod })">Add transaction</a>
+                        <a class="addRecurring" href="@Url.Action("Create", "Expenses", new {title = expense.Title, price = expense.Price, bank = expense.Bank, category = expense.Category, paymentMethod = expense.PaymentMethod })">Add transaction</a>
                     </td>
                 </tr>
             }

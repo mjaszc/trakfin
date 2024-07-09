@@ -47,6 +47,7 @@ namespace Trakfin.Models
         public string? Bank { get; set; }
 
         [DataType(DataType.Currency), Column(TypeName = "decimal(18, 2)")]
+        [Range(0.1, double.MaxValue, ErrorMessage = "The price must be at least 0.1")]
         public decimal Price { get; set; }
 
         [StringLength(60, MinimumLength = 3)]

@@ -128,7 +128,7 @@ namespace Trakfin.Controllers
         }
 
         // GET: Expenses/Create
-        public IActionResult Create(string title = "", decimal price = 0, string bank = "", string category = "")
+        public IActionResult Create(string title = "", decimal price = 0, string bank = "", string category = "", ExpensePaymentMethod? paymentMethod = null)
         {
             // Arguments are passed from Recurring Transaction "Add Transaction" anchor tag,
             // and it is pre-filling the values in the Create Expense page
@@ -138,6 +138,7 @@ namespace Trakfin.Controllers
                 Price = price,
                 Bank = bank,
                 Category = category,
+                PaymentMethod = paymentMethod,
                 Date = DateTime.Now
             };
 
