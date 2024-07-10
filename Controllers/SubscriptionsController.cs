@@ -20,9 +20,29 @@ namespace Trakfin.Controllers
         }
 
         // GET: Subscriptions
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-            return View(await _context.Subscription.ToListAsync());
+            var subscriptions = FilterSubscriptions(searchString);
+
+            var subscriptionsVm = new SubscriptionViewModel { Subscriptions = await subscriptions.ToListAsync() };
+
+            return View(subscriptionsVm);
+        }
+
+        private IQueryable<Subscription> GetSubscriptions() =>
+            from s in _context.Subscription
+            select s;
+
+        private IQueryable<Subscription> FilterSubscriptions(string searchString)
+        {
+            var subscriptions = GetSubscriptions();
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                subscriptions = subscriptions.Where(s => s.Name == searchString);
+            }
+
+            return subscriptions;
         }
 
         // GET: Subscriptions/Details/5

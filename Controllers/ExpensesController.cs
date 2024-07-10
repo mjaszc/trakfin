@@ -24,7 +24,7 @@ namespace Trakfin.Controllers
             var recurringTransactions = FilterRecurringTransactions(searchString, bankName, categoryName);
             expenses = SortExpenses(expenses, sortOrder);
 
-            var bankNameVM = new ExpenseViewModel
+            var expensesVm = new ExpenseViewModel
             {
                 Expenses = await expenses.ToListAsync(),
                 RecurringTransactions = await recurringTransactions.ToListAsync(),
@@ -32,7 +32,7 @@ namespace Trakfin.Controllers
                 Categories = new SelectList(await categoryQuery.Distinct().ToListAsync()),
             };
 
-            return View(bankNameVM);
+            return View(expensesVm);
         }
 
         private IQueryable<string> GetCategory() =>
@@ -50,6 +50,7 @@ namespace Trakfin.Controllers
         private IQueryable<Expense> GetExpense() =>
             from e in _context.Expense
             select e;
+
         private IQueryable<Expense> GetRecurringTransactions() =>
             from e in _context.Expense
             where e.Recurring == ExpenseRecurring.Yes
