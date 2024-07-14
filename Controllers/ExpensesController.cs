@@ -51,6 +51,7 @@ namespace Trakfin.Controllers
             from e in _context.Expense
             select e;
 
+
         private IQueryable<Expense> GetRecurringTransactions() =>
             from e in _context.Expense
             where e.Recurring == ExpenseRecurring.Yes
@@ -169,8 +170,11 @@ namespace Trakfin.Controllers
         }
 
         // GET: Expenses/Create
-        public IActionResult Create(string title = "", decimal price = 0, string bank = "", string category = "", ExpensePaymentMethod? paymentMethod = null, ExpenseRecurring? recurring = null)
+        public async Task<IActionResult> Create(string title = "", decimal price = 0, string bank = "", string category = "", ExpensePaymentMethod? paymentMethod = null, ExpenseRecurring? recurring = null)
         {
+            // Fetching budget names and passing them to the view via ViewBag
+            ViewBag.BudgetNames = new SelectList(await GetBudgetName().ToListAsync());
+
             // Arguments are passed from Recurring Transaction "Add Transaction" anchor tag,
             // and it is pre-filling the values in the Create Expense page
             var model = new Expense
@@ -186,6 +190,13 @@ namespace Trakfin.Controllers
 
             return View(model);
         }
+
+
+        private IQueryable<string> GetBudgetName() =>
+            from b in _context.Budget
+            where b.Name != null
+            orderby b.Name
+            select b.Name;
 
         // POST: Expenses/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.

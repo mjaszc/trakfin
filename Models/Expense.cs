@@ -68,5 +68,8 @@ namespace Trakfin.Models
         public string? Tags { get; set; }
 
         public ExpenseStatus? Status { get; set; } = null;
+
+        public Budget? Budget { get; set; } = null;
+
     }
 }

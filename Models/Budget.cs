@@ -26,9 +26,6 @@ namespace Trakfin.Models
         [DataType(DataType.Currency), Column(TypeName = "decimal(18, 2)"), Required]
         public decimal? SpentAmount { get; set; }
 
-        [StringLength(15, MinimumLength = 3)]
-        public string? BudgetPeriod { get; set; }
-
         [DataType(DataType.Date), Required]
         public DateTime? StartDate { get; set; }
 
@@ -40,7 +37,11 @@ namespace Trakfin.Models
         [StringLength(250, MinimumLength = 3)]
         public string? Notes { get; set; }
 
+        // public string? Notifications // ADD THAT COLUMN AFTER IMPLEMENTING NOTIFICATIONS
+
         [StringLength(60, MinimumLength = 3)]
         public string? Tags { get; set; }
+
+        public int? ExpenseId { get; set; }
     }
 }

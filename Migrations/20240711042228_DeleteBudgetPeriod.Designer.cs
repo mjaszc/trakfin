@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Trakfin.Data;
 
@@ -11,9 +12,11 @@ using Trakfin.Data;
 namespace Trakfin.Migrations
 {
     [DbContext(typeof(TrakfinContext))]
-    partial class TrakfinContextModelSnapshot : ModelSnapshot
+    [Migration("20240711042228_DeleteBudgetPeriod")]
+    partial class DeleteBudgetPeriod
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,9 +45,6 @@ namespace Trakfin.Migrations
                         .IsRequired()
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("ExpenseId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -70,8 +70,6 @@ namespace Trakfin.Migrations
                         .HasColumnType("nvarchar(60)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ExpenseId");
 
                     b.ToTable("Budget");
                 });
@@ -191,18 +189,6 @@ namespace Trakfin.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Subscription");
-                });
-
-            modelBuilder.Entity("Trakfin.Models.Budget", b =>
-                {
-                    b.HasOne("Trakfin.Models.Expense", null)
-                        .WithMany("Budgets")
-                        .HasForeignKey("ExpenseId");
-                });
-
-            modelBuilder.Entity("Trakfin.Models.Expense", b =>
-                {
-                    b.Navigation("Budgets");
                 });
 #pragma warning restore 612, 618
         }
