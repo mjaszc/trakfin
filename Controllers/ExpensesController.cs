@@ -168,6 +168,7 @@ namespace Trakfin.Controllers
 
             var expense = await _context.Expense
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (expense == null)
             {
                 return NotFound();
@@ -217,12 +218,15 @@ namespace Trakfin.Controllers
         // GET: Expenses/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            ViewBag.BudgetNames = new SelectList(_context.Budget, "Id", "Name");
+
             if (id == null)
             {
                 return NotFound();
             }
 
-            var expense = await _context.Expense.FindAsync(id);
+            var expense = await _context.Expense
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (expense == null)
             {
                 return NotFound();
@@ -235,7 +239,7 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Date,Bank,Category,Price")] Expense expense)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Date,Bank,Price,Category,Note,PaymentMethod,Recurring,MerchantOrVendor,Tags,Status,BudgetId,Budget")] Expense expense)
         {
             if (id != expense.Id)
             {
