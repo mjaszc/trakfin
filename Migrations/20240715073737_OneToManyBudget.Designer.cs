@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Trakfin.Data;
 
@@ -11,9 +12,11 @@ using Trakfin.Data;
 namespace Trakfin.Migrations
 {
     [DbContext(typeof(TrakfinContext))]
-    partial class TrakfinContextModelSnapshot : ModelSnapshot
+    [Migration("20240715073737_OneToManyBudget")]
+    partial class OneToManyBudget
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,6 +36,9 @@ namespace Trakfin.Migrations
                     b.Property<decimal?>("BudgetAmount")
                         .IsRequired()
                         .HasColumnType("decimal(18, 2)");
+
+                    b.Property<int?>("BudgetId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Category")
                         .HasMaxLength(30)
@@ -67,6 +73,8 @@ namespace Trakfin.Migrations
                         .HasColumnType("nvarchar(60)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BudgetId");
 
                     b.ToTable("Budget");
                 });
@@ -193,10 +201,17 @@ namespace Trakfin.Migrations
                     b.ToTable("Subscription");
                 });
 
+            modelBuilder.Entity("Trakfin.Models.Budget", b =>
+                {
+                    b.HasOne("Trakfin.Models.Budget", null)
+                        .WithMany("Budgets")
+                        .HasForeignKey("BudgetId");
+                });
+
             modelBuilder.Entity("Trakfin.Models.Expense", b =>
                 {
                     b.HasOne("Trakfin.Models.Budget", "Budget")
-                        .WithMany("Expenses")
+                        .WithMany()
                         .HasForeignKey("BudgetId");
 
                     b.Navigation("Budget");
@@ -204,7 +219,7 @@ namespace Trakfin.Migrations
 
             modelBuilder.Entity("Trakfin.Models.Budget", b =>
                 {
-                    b.Navigation("Expenses");
+                    b.Navigation("Budgets");
                 });
 #pragma warning restore 612, 618
         }

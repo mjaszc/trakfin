@@ -42,6 +42,6 @@ namespace Trakfin.Models
         [StringLength(60, MinimumLength = 3)]
         public string? Tags { get; set; }
 
-        public int? ExpenseId { get; set; }
+        public ICollection<Expense> Expenses { get; } = new List<Expense>();
     }
 }

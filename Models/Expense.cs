@@ -69,7 +69,8 @@ namespace Trakfin.Models
 
         public ExpenseStatus? Status { get; set; } = null;
 
-        public Budget? Budget { get; set; } = null;
+        public int? BudgetId { get; set; }
 
+        public Budget? Budget { get; set; }
     }
 }

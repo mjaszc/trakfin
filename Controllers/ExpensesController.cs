@@ -22,11 +22,13 @@ namespace Trakfin.Controllers
             var categoryQuery = GetCategory();
             var expenses = FilterExpenses(searchString, bankName, categoryName, startDate, endDate);
             var recurringTransactions = FilterRecurringTransactions(searchString, bankName, categoryName);
+            var budgetNames = GetBudgetNames();
             expenses = SortExpenses(expenses, sortOrder);
 
             var expensesVm = new ExpenseViewModel
             {
                 Expenses = await expenses.ToListAsync(),
+                BudgetNames = budgetNames,
                 RecurringTransactions = await recurringTransactions.ToListAsync(),
                 Banks = new SelectList(await bankQuery.Distinct().ToListAsync()),
                 Categories = new SelectList(await categoryQuery.Distinct().ToListAsync()),
@@ -51,7 +53,6 @@ namespace Trakfin.Controllers
             from e in _context.Expense
             select e;
 
-
         private IQueryable<Expense> GetRecurringTransactions() =>
             from e in _context.Expense
             where e.Recurring == ExpenseRecurring.Yes
@@ -62,6 +63,12 @@ namespace Trakfin.Controllers
             */
             group e by new { e.Title, e.Price, e.Category, e.Bank } into x
             select x.FirstOrDefault();
+
+        private Dictionary<int, string> GetBudgetNames()
+        {
+            return _context.Expense.Include(e => e.Budget)
+                .ToDictionary(e => e.Id, e => e.Budget != null ? e.Budget.Name : string.Empty)!;
+        }
 
         private IQueryable<Expense> FilterExpenses(string searchString, string bankName, string categoryName, DateTime? startDate, DateTime? endDate)
         {
@@ -170,10 +177,10 @@ namespace Trakfin.Controllers
         }
 
         // GET: Expenses/Create
-        public async Task<IActionResult> Create(string title = "", decimal price = 0, string bank = "", string category = "", ExpensePaymentMethod? paymentMethod = null, ExpenseRecurring? recurring = null)
+        public async Task<IActionResult> Create(string title = "", decimal price = 0, string bank = "", string category = "" ,ExpensePaymentMethod? paymentMethod = null, ExpenseRecurring? recurring = null)
         {
             // Fetching budget names and passing them to the view via ViewBag
-            ViewBag.BudgetNames = new SelectList(await GetBudgetName().ToListAsync());
+            ViewBag.BudgetNames = new SelectList(_context.Budget, "Id", "Name");
 
             // Arguments are passed from Recurring Transaction "Add Transaction" anchor tag,
             // and it is pre-filling the values in the Create Expense page
@@ -191,19 +198,12 @@ namespace Trakfin.Controllers
             return View(model);
         }
 
-
-        private IQueryable<string> GetBudgetName() =>
-            from b in _context.Budget
-            where b.Name != null
-            orderby b.Name
-            select b.Name;
-
         // POST: Expenses/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Date,Bank,Price,Category,Note,PaymentMethod,Recurring,MerchantOrVendor,Tags,Status")] Expense expense)
+        public async Task<IActionResult> Create([Bind("Id,Title,Date,Bank,Price,Category,Note,PaymentMethod,Recurring,MerchantOrVendor,Tags,Status,BudgetId,Budget")] Expense expense)
         {
             if (ModelState.IsValid)
             {

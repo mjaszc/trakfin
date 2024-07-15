@@ -7,6 +7,7 @@ namespace Trakfin.Models
     {
         public List<Expense>? Expenses { get; set; }
         public List<Expense>? RecurringTransactions { get; set; }
+
         public SelectList? Banks { get; set; }
         public SelectList? Categories { get; set; }
 
@@ -15,6 +16,8 @@ namespace Trakfin.Models
         public string? CategoryName { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+
+        public Dictionary<int, string>? BudgetNames { get; set; }
     }
         
 }
