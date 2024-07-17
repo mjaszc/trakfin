@@ -3,6 +3,23 @@
 
 // Write your JavaScript code.
 
+// PAGE THEME LOGIC 
+document.getElementById('themeSwitch').addEventListener('click', () => {
+    let currentTheme = document.documentElement.getAttribute('data-bs-theme');
+    let newTheme = currentTheme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+    localStorage.setItem('themePreference', newTheme);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('themePreference');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    }
+});
+
+
+// RECURRING TRANSACTIONS 
 var addRecurringElement = document.querySelector('.addRecurring');
 
 if (addRecurringElement) {
@@ -16,6 +33,8 @@ function resetSelectElement(elementId) {
     selectElement.selectedIndex = 0;
 }
 
+
+// SUBSCRIPTION AUTOCOMPLETE DATE FUNCTION
 document.addEventListener('DOMContentLoaded', function () {
     var startDateInput = document.querySelector('.addTimeInterval');
     var billingCycleType = document.querySelector('.billingCycleType');
