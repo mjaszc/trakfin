@@ -11,6 +11,11 @@ if (addRecurringElement) {
     });
 }
 
+function resetSelectElement(elementId) {
+    var selectElement = document.getElementById(elementId);
+    selectElement.selectedIndex = 0;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     var startDateInput = document.querySelector('.addTimeInterval');
     var billingCycleType = document.querySelector('.billingCycleType');

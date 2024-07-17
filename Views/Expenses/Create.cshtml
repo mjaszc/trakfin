@@ -44,17 +44,19 @@
             </div>
             <div class="form-group">
                 <label asp-for="PaymentMethod" class="control-label"></label>
-                <select asp-for="PaymentMethod" class="form-control" asp-items="@(new SelectList(Enum.GetValues(typeof(ExpensePaymentMethod))))">
+                <select asp-for="PaymentMethod" class="form-control" id="paymentMethodSelect" asp-items="@(new SelectList(Enum.GetValues(typeof(ExpensePaymentMethod))))">
                     <option disabled selected>--- SELECT ---</option>
                 </select>
                 <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                <button class="btn" type="button" onclick="resetSelectElement('paymentMethodSelect')">Reset</button>
             </div>
             <div class="form-group">
                 <label asp-for="Recurring" class="control-label"></label>
-                <select asp-for="Recurring" class="form-control" asp-items="@(new SelectList(Enum.GetValues(typeof(ExpenseRecurring))))">
+                <select asp-for="Recurring" class="form-control" id="recurringSelect" asp-items="@(new SelectList(Enum.GetValues(typeof(ExpenseRecurring))))">
                     <option disabled selected>--- SELECT ---</option>
                 </select>
                 <span asp-validation-for="Recurring" class="text-danger"></span>
+                <button class="btn" type="button" onclick="resetSelectElement('recurringSelect')">Reset</button>
             </div>
             <div class="form-group">
                 <label asp-for="MerchantOrVendor" class="control-label"></label>
@@ -68,17 +70,19 @@
             </div>
             <div class="form-group">
                 <label asp-for="Status" class="control-label"></label>
-                <select asp-for="Status" class="form-control" asp-items="@(new SelectList(Enum.GetValues(typeof(ExpenseStatus))))">
+                <select asp-for="Status" class="form-control" id="statusSelect" asp-items="@(new SelectList(Enum.GetValues(typeof(ExpenseStatus))))">
                     <option disabled selected>--- SELECT ---</option>
                 </select>
                 <span asp-validation-for="Status" class="text-danger"></span>
+                <button class="btn" type="button" onclick="resetSelectElement('statusSelect')">Reset</button>
             </div>
             <div class="form-group">
                 <label asp-for="BudgetId" class="control-label"></label>
-                <select asp-for="BudgetId" class="form-control" asp-items="ViewBag.BudgetNames">
+                <select asp-for="BudgetId" class="form-control" id="budgetSelect" asp-items="ViewBag.BudgetNames">
                     <option disabled selected>--- SELECT ---</option>
                 </select>
                 <span asp-validation-for="Budget" class="text-danger"></span>
+                <button class="btn" type="button" onclick="resetSelectElement('budgetSelect')">Reset</button>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
