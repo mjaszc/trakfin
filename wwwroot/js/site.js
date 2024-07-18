@@ -3,13 +3,52 @@
 
 // Write your JavaScript code.
 
-// PAGE THEME LOGIC 
-document.getElementById('themeSwitch').addEventListener('click', () => {
-    let currentTheme = document.documentElement.getAttribute('data-bs-theme');
-    let newTheme = currentTheme === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute('data-bs-theme', newTheme);
-    localStorage.setItem('themePreference', newTheme);
-});
+// BUDGET PRICE VALIDATION IN EXPENSE
+var priceElement = document.getElementById('priceInput');
+var budgetSelect = document.getElementById('budgetSelect');
+
+if (priceElement && budgetSelect) {
+    var priceElementValue;
+    var pricePartFromInput;
+
+    var selectedBudgetValue = budgetSelect.value;
+    var selectedBudgetText = budgetSelect.options[budgetSelect.selectedIndex].text;
+
+    function UpdateBudgetAndPriceValue() {
+        selectedBudgetValue = budgetSelect.value;
+        selectedBudgetText = budgetSelect.options[budgetSelect.selectedIndex].text;
+
+        pricePartFromInput = selectedBudgetText.split(',')[1].trim();
+    }
+
+    priceInput.addEventListener('blur', function () {
+        priceElementValue = this.value;
+    });
+
+    budgetSelect.addEventListener('input', function () {
+        UpdateBudgetAndPriceValue();
+
+        if (priceElementValue > pricePartFromInput) {
+            console.log("Price is too big for that budget!");
+        }
+        else {
+            console.log("Its ok");
+        }
+    });
+}
+
+// PAGE THEME LOGIC
+var themeSwitch = document.getElementById('themeSwitch')
+
+if (themeSwitch) {
+    themeSwitch.addEventListener('click', () => {
+        let currentTheme = document.documentElement.getAttribute('data-bs-theme');
+        let newTheme = currentTheme === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('themePreference', newTheme);
+    });
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('themePreference');
