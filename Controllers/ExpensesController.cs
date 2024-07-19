@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using Trakfin.Data;
+using Trakfin.Migrations;
 using Trakfin.Models;
 
 namespace Trakfin.Controllers
@@ -178,10 +180,20 @@ namespace Trakfin.Controllers
         }
 
         // GET: Expenses/Create
-        public async Task<IActionResult> Create(string title = "", decimal price = 0, string bank = "", string category = "" ,ExpensePaymentMethod? paymentMethod = null, ExpenseRecurring? recurring = null)
+        public async Task<IActionResult> Create(string title = "", decimal price = 0, string bank = "", string category = "", ExpensePaymentMethod? paymentMethod = null, ExpenseRecurring? recurring = null)
         {
-            // Fetching budget names and passing them to the view via ViewBag
-            ViewBag.BudgetNames = new SelectList(_context.Budget, "Id", "Name");
+
+            // Fetch the data and project it into the desired format asynchronously
+            var budgetDetails = await _context.Budget
+                .Select(b => new
+                {
+                    b.Id,
+                    NameAndAmount = b.Name + ", " + b.BudgetAmount
+                })
+                .ToListAsync();
+
+            // Create a SelectList from the formatted data
+            ViewBag.BudgetDetails = new SelectList(budgetDetails, "Id", "NameAndAmount");
 
             // Arguments are passed from Recurring Transaction "Add Transaction" anchor tag,
             // and it is pre-filling the values in the Create Expense page
@@ -209,9 +221,37 @@ namespace Trakfin.Controllers
             if (ModelState.IsValid)
             {
                 _context.Add(expense);
+                
+                if (expense.BudgetId.HasValue)
+                {
+                    var budgetDetails = await _context.Budget
+                        .Where(b => b.Id == expense.BudgetId.Value)
+                        .Select(b => new
+                        {
+                            b.Id,
+                            b.BudgetAmount,
+                            b.SpentAmount
+                        })
+                        .FirstOrDefaultAsync();
+
+                    var selectedBudget = await _context.Budget.FirstOrDefaultAsync(b => b.Id == expense.BudgetId.Value);
+
+                    if (budgetDetails!.BudgetAmount > expense.Price)
+                    {
+                        // Console.WriteLine($"BUDGET AMOUNT {budgetDetails!.BudgetAmount} EXPENSE PRICE {expense.Price}");
+                        var updatedBudgetAmount = budgetDetails.BudgetAmount - expense.Price;
+
+                        selectedBudget!.BudgetAmount = updatedBudgetAmount;
+                        selectedBudget!.SpentAmount += expense.Price;
+
+                        await _context.SaveChangesAsync();
+                    }
+                }
                 await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
+            
             return View(expense);
         }
 
