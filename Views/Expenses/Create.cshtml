@@ -85,7 +85,8 @@
                 <button class="btn" type="button" onclick="resetSelectElement('budgetSelect')">Reset</button>
             </div>
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit" value="Create" class="btn btn-primary" id="expenseSubmitBtn"/>
+                <div id="errorMessage" class="text-danger" style="display: none;">Error: The form cannot be submitted right now.</div>
             </div>
         </form>
     </div>

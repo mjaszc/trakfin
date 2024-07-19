@@ -6,34 +6,51 @@
 // BUDGET PRICE VALIDATION IN EXPENSE
 var priceElement = document.getElementById('priceInput');
 var budgetSelect = document.getElementById('budgetSelect');
+var expenseSubmitBtn = document.getElementById('expenseSubmitBtn');
 
-if (priceElement && budgetSelect) {
-    var priceElementValue;
-    var pricePartFromInput;
+if (priceElement && budgetSelect && expenseSubmitBtn) {
+    var priceValue;
+    var budgetAmount;
 
     var selectedBudgetValue = budgetSelect.value;
     var selectedBudgetText = budgetSelect.options[budgetSelect.selectedIndex].text;
 
-    function UpdateBudgetAndPriceValue() {
+    function UpdateBudgetAndPrice() {
         selectedBudgetValue = budgetSelect.value;
         selectedBudgetText = budgetSelect.options[budgetSelect.selectedIndex].text;
-
-        pricePartFromInput = selectedBudgetText.split(',')[1].trim();
+        budgetAmount = parseFloat(selectedBudgetText.split(',')[1].trim());
     }
 
-    priceInput.addEventListener('blur', function () {
-        priceElementValue = this.value;
-    });
-
-    budgetSelect.addEventListener('input', function () {
-        UpdateBudgetAndPriceValue();
-
-        if (priceElementValue > pricePartFromInput) {
+    function compareBudgetWithPriceValue(price, budget) {
+        if (price > budget) {
             console.log("Price is too big for that budget!");
+            expenseSubmitBtn.disabled = true;
+            if (expenseSubmitBtn.disabled) {
+                errorMessage.style.display = "block";
+            } else {
+                errorMessage.style.display = "none";
+            }
         }
         else {
             console.log("Its ok");
+            expenseSubmitBtn.disabled = false;
+            errorMessage.style.display = "none";
         }
+    }
+
+    priceInput.addEventListener('blur', function () {
+        if (budgetSelect.value != "--- SELECT ---") {
+            UpdateBudgetAndPrice();
+        }
+        priceValue = parseFloat(this.value); // Parse for comparison with budget amount (which is decimal)
+
+        compareBudgetWithPriceValue(priceValue, budgetAmount);
+    });
+        
+    budgetSelect.addEventListener('input', function () {
+        UpdateBudgetAndPrice();
+
+        compareBudgetWithPriceValue(priceValue, budgetAmount);
     });
 }
 

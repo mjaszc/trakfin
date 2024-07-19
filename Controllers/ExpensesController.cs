@@ -229,7 +229,8 @@ namespace Trakfin.Controllers
                         .Select(b => new
                         {
                             b.Id,
-                            b.BudgetAmount
+                            b.BudgetAmount,
+                            b.SpentAmount
                         })
                         .FirstOrDefaultAsync();
 
@@ -241,6 +242,8 @@ namespace Trakfin.Controllers
                         var updatedBudgetAmount = budgetDetails.BudgetAmount - expense.Price;
 
                         selectedBudget!.BudgetAmount = updatedBudgetAmount;
+                        selectedBudget!.SpentAmount += expense.Price;
+
                         await _context.SaveChangesAsync();
                     }
                 }
@@ -248,8 +251,6 @@ namespace Trakfin.Controllers
 
                 return RedirectToAction(nameof(Index));
             }
-
-            
             
             return View(expense);
         }
