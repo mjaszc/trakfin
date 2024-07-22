@@ -58,7 +58,7 @@
                         <td>@filter.EndDate?.ToString("dd/MM/yyyy")</td>
                         <td>@filter.Title</td>
                         <td>
-                            <a href="@Url.Action("Index", "Expenses", new { bank = filter.Bank, category = filter.Category, startDate = filter.StartDate, endDate = filter.EndDate, title = filter.Title })">Apply custom filter</a>
+                            <a href="@Url.Action("Index", "Expenses", new { BankName = filter.Bank, CategoryName = filter.Category, StartDate = filter.StartDate, EndDate = filter.EndDate, SearchString = filter.Title })">Apply custom filter</a>
                         </td>
                     </tr>
                 }
