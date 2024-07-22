@@ -22,7 +22,7 @@ namespace Trakfin.Controllers
             var categoryQuery = GetCategory();
             var expenses = FilterExpenses(searchString, bankName, categoryName, startDate, endDate);
             var recurringTransactions = FilterRecurringTransactions(searchString, bankName, categoryName);
-            var budgetNames = GetBudgetNames();
+            var budgetNames = await GetBudgetNames();
             expenses = SortExpenses(expenses, sortOrder);
 
             var expensesVm = new ExpenseViewModel
@@ -64,10 +64,10 @@ namespace Trakfin.Controllers
             group e by new { e.Title, e.Price, e.Category, e.Bank } into x
             select x.FirstOrDefault();
 
-        private Dictionary<int, string> GetBudgetNames()
+        private async Task<Dictionary<int, string?>> GetBudgetNames()
         {
-            return _context.Expense.Include(e => e.Budget)
-                .ToDictionary(e => e.Id, e => e.Budget != null ? e.Budget.Name : string.Empty)!;
+            return await _context.Expense.Include(e => e.Budget)
+                .ToDictionaryAsync(e => e.Id, e => e.Budget != null ? e.Budget.Name : string.Empty);
         }
 
         private IQueryable<Expense> FilterExpenses(string searchString, string bankName, string categoryName, DateTime? startDate, DateTime? endDate)

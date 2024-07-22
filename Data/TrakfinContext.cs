@@ -17,5 +17,6 @@ namespace Trakfin.Data
         public DbSet<Trakfin.Models.Expense> Expense { get; set; }
         public DbSet<Trakfin.Models.Subscription> Subscription { get; set; }
         public DbSet<Trakfin.Models.Budget> Budget { get; set; }
+        public DbSet<Trakfin.Models.CustomFilter> CustomFilter { get; set; }
     }
 }
