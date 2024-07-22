@@ -3,13 +3,69 @@
 
 // Write your JavaScript code.
 
-// PAGE THEME LOGIC 
-document.getElementById('themeSwitch').addEventListener('click', () => {
-    let currentTheme = document.documentElement.getAttribute('data-bs-theme');
-    let newTheme = currentTheme === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute('data-bs-theme', newTheme);
-    localStorage.setItem('themePreference', newTheme);
-});
+// BUDGET PRICE VALIDATION IN EXPENSE
+var priceElement = document.getElementById('priceInput');
+var budgetSelect = document.getElementById('budgetSelect');
+var expenseSubmitBtn = document.getElementById('expenseSubmitBtn');
+
+if (priceElement && budgetSelect && expenseSubmitBtn) {
+    var priceValue;
+    var budgetAmount;
+
+    var selectedBudgetValue = budgetSelect.value;
+    var selectedBudgetText = budgetSelect.options[budgetSelect.selectedIndex].text;
+
+    function UpdateBudgetAndPrice() {
+        selectedBudgetValue = budgetSelect.value;
+        selectedBudgetText = budgetSelect.options[budgetSelect.selectedIndex].text;
+        budgetAmount = parseFloat(selectedBudgetText.split(',')[1].trim());
+    }
+
+    function compareBudgetWithPriceValue(price, budget) {
+        if (price > budget) {
+            console.log("Price is too big for that budget!");
+            expenseSubmitBtn.disabled = true;
+            if (expenseSubmitBtn.disabled) {
+                errorMessage.style.display = "block";
+            } else {
+                errorMessage.style.display = "none";
+            }
+        }
+        else {
+            console.log("Its ok");
+            expenseSubmitBtn.disabled = false;
+            errorMessage.style.display = "none";
+        }
+    }
+
+    priceInput.addEventListener('blur', function () {
+        if (budgetSelect.value != "--- SELECT ---") {
+            UpdateBudgetAndPrice();
+        }
+        priceValue = parseFloat(this.value); // Parse for comparison with budget amount (which is decimal)
+
+        compareBudgetWithPriceValue(priceValue, budgetAmount);
+    });
+        
+    budgetSelect.addEventListener('input', function () {
+        UpdateBudgetAndPrice();
+
+        compareBudgetWithPriceValue(priceValue, budgetAmount);
+    });
+}
+
+// PAGE THEME LOGIC
+var themeSwitch = document.getElementById('themeSwitch')
+
+if (themeSwitch) {
+    themeSwitch.addEventListener('click', () => {
+        let currentTheme = document.documentElement.getAttribute('data-bs-theme');
+        let newTheme = currentTheme === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('themePreference', newTheme);
+    });
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('themePreference');

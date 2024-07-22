@@ -29,7 +29,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="Price" class="control-label"></label>
-                <input asp-for="Price" class="form-control" />
+                <input asp-for="Price" class="form-control" id="priceInput" />
                 <span asp-validation-for="Price" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -78,14 +78,15 @@
             </div>
             <div class="form-group">
                 <label asp-for="BudgetId" class="control-label"></label>
-                <select asp-for="BudgetId" class="form-control" id="budgetSelect" asp-items="ViewBag.BudgetNames">
+                <select asp-for="BudgetId" class="form-control" id="budgetSelect" asp-items="ViewBag.BudgetDetails">
                     <option disabled selected>--- SELECT ---</option>
                 </select>
                 <span asp-validation-for="Budget" class="text-danger"></span>
                 <button class="btn" type="button" onclick="resetSelectElement('budgetSelect')">Reset</button>
             </div>
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit" value="Create" class="btn btn-primary" id="expenseSubmitBtn"/>
+                <div id="errorMessage" class="text-danger" style="display: none;">Error: The form cannot be submitted right now.</div>
             </div>
         </form>
     </div>
