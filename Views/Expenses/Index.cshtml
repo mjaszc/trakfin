@@ -32,6 +32,41 @@
     </p>
 </form>
 
+@if (Model.CustomFilters != null && Model.CustomFilters.Any())
+{
+    <h2>Custom Filters</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Bank</th>
+                <th>Category</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Title</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.CustomFilters != null)
+            {
+                @foreach (var filter in Model.CustomFilters)
+                {
+                    <tr>
+                        <td>@filter.Bank</td>
+                        <td>@filter.Category</td>
+                        <td>@filter.StartDate?.ToString("dd/MM/yyyy")</td>
+                        <td>@filter.EndDate?.ToString("dd/MM/yyyy")</td>
+                        <td>@filter.Title</td>
+                        <td>
+                            <a href="@Url.Action("Index", "Expenses", new { bank = filter.Bank, category = filter.Category, startDate = filter.StartDate, endDate = filter.EndDate, title = filter.Title })">Apply custom filter</a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+
 
 @if (Model.RecurringTransactions != null && Model.RecurringTransactions.Any())
 {
@@ -39,31 +74,31 @@
 
     <table>
         <thead>
-        <tr>
-            <th>Title</th>
-            <th>Amount</th>
-            <th>Bank</th>
-            <th>Category</th>
-            <th>Payment Method</th>
-        </tr>
+            <tr>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Bank</th>
+                <th>Category</th>
+                <th>Payment Method</th>
+            </tr>
         </thead>
         <tbody>
             @if (Model.RecurringTransactions != null)
-        {
-            foreach (var expense in Model.RecurringTransactions)
             {
-                <tr >
-                    <td>@expense.Title</td>
-                    <td>@expense.Price</td>
-                    <td>@expense.Bank</td>
-                    <td>@expense.Category</td>
-                    <td>@expense.PaymentMethod</td>
-                    <td>
-                        <a class="addRecurring" href="@Url.Action("Create", "Expenses", new { title = expense.Title, price = expense.Price, bank = expense.Bank, category = expense.Category, paymentMethod = expense.PaymentMethod, recurring = expense.Recurring })">Add transaction</a>
-                    </td>
-                </tr>
+                foreach (var expense in Model.RecurringTransactions)
+                {
+                    <tr>
+                        <td>@expense.Title</td>
+                        <td>@expense.Price</td>
+                        <td>@expense.Bank</td>
+                        <td>@expense.Category</td>
+                        <td>@expense.PaymentMethod</td>
+                        <td>
+                            <a class="addRecurring" href="@Url.Action("Create", "Expenses", new { title = expense.Title, price = expense.Price, bank = expense.Bank, category = expense.Category, paymentMethod = expense.PaymentMethod, recurring = expense.Recurring })">Add transaction</a>
+                        </td>
+                    </tr>
+                }
             }
-        }
         </tbody>
     </table>
 }

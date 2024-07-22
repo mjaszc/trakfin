@@ -5,6 +5,7 @@ using System.Globalization;
 using Trakfin.Data;
 using Trakfin.Migrations;
 using Trakfin.Models;
+using CustomFilter = Trakfin.Models.CustomFilter;
 
 namespace Trakfin.Controllers
 {
@@ -23,15 +24,16 @@ namespace Trakfin.Controllers
             var bankQuery = GetBank();
             var categoryQuery = GetCategory();
             var expenses = FilterExpenses(searchString, bankName, categoryName, startDate, endDate);
+            var customFilters = GetCustomFilters();
             var recurringTransactions = FilterRecurringTransactions(searchString, bankName, categoryName);
-            var budgetNames = await GetBudgetNames();
             expenses = SortExpenses(expenses, sortOrder);
 
             var expensesVm = new ExpenseViewModel
             {
                 Expenses = await expenses.ToListAsync(),
-                BudgetNames = budgetNames,
+                BudgetNames = await GetBudgetNames(),
                 RecurringTransactions = await recurringTransactions.ToListAsync(),
+                CustomFilters = await customFilters.ToListAsync(),
                 Banks = new SelectList(await bankQuery.Distinct().ToListAsync()),
                 Categories = new SelectList(await categoryQuery.Distinct().ToListAsync()),
             };
@@ -66,10 +68,14 @@ namespace Trakfin.Controllers
             group e by new { e.Title, e.Price, e.Category, e.Bank } into x
             select x.FirstOrDefault();
 
-        private async Task<Dictionary<int, string?>> GetBudgetNames()
+        private IQueryable<CustomFilter> GetCustomFilters() =>
+            from f in _context.CustomFilter
+            select f;
+
+        private async Task<Dictionary<int, string>> GetBudgetNames()
         {
             return await _context.Expense.Include(e => e.Budget)
-                .ToDictionaryAsync(e => e.Id, e => e.Budget != null ? e.Budget.Name : string.Empty);
+                .ToDictionaryAsync(e => e.Id, e => e.Budget?.Name ?? string.Empty);
         }
 
         private IQueryable<Expense> FilterExpenses(string searchString, string bankName, string categoryName, DateTime? startDate, DateTime? endDate)

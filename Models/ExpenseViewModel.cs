@@ -7,6 +7,7 @@ namespace Trakfin.Models
     {
         public List<Expense>? Expenses { get; set; }
         public List<Expense>? RecurringTransactions { get; set; }
+        public List<CustomFilter>? CustomFilters { get; set; }
 
         public SelectList? Banks { get; set; }
         public SelectList? Categories { get; set; }
