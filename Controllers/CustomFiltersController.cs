@@ -44,9 +44,18 @@ namespace Trakfin.Controllers
         }
 
         // GET: CustomFilters/Create
-        public IActionResult Create()
+        public IActionResult Create(string bankName, string categoryName, DateTime? startDate, DateTime? endDate, string searchString)
         {
-            return View();
+            var model = new CustomFilter
+            {
+                Bank = bankName,
+                Category = categoryName,
+                StartDate = startDate,
+                EndDate = endDate,
+                Title = searchString // Assuming you want to use the SearchString as the Title
+            };
+
+            return View(model);
         }
 
         // POST: CustomFilters/Create

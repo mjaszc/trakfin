@@ -25,12 +25,24 @@
         End Date: <input asp-for="EndDate" type="date" name="EndDate" />
 
         Title: <input asp-for="SearchString" type="text" name="SearchString" />
+        
+        
+
 
         <input type="submit" value="Filter" />
 
         <a asp-area="" asp-controller="Expenses" asp-action="Index">Clear all filters</a>
+        
     </p>
 </form>
+
+<a href="@Url.Action("Create", "CustomFilters", new { 
+             BankName = Context.Request.Query["BankName"], 
+             CategoryName = Context.Request.Query["CategoryName"], 
+             StartDate = Context.Request.Query["StartDate"], 
+             EndDate = Context.Request.Query["EndDate"], 
+             SearchString = Context.Request.Query["SearchString"] 
+         })">Create custom filter from applied filters</a>
 
 @if (Model.CustomFilters != null && Model.CustomFilters.Any())
 {
@@ -59,6 +71,9 @@
                         <td>@filter.Title</td>
                         <td>
                             <a href="@Url.Action("Index", "Expenses", new { BankName = filter.Bank, CategoryName = filter.Category, StartDate = filter.StartDate, EndDate = filter.EndDate, SearchString = filter.Title })">Apply custom filter</a>
+                        </td>
+                        <td>
+                            <a href="@Url.Action("Edit", "CustomFilters", new {Id = filter.Id})">Edit</a>
                         </td>
                     </tr>
                 }
