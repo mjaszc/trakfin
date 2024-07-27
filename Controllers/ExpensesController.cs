@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
@@ -9,6 +10,7 @@ using CustomFilter = Trakfin.Models.CustomFilter;
 
 namespace Trakfin.Controllers
 {
+    [Authorize]
     public class ExpensesController : Controller
     {
         private readonly TrakfinContext _context;

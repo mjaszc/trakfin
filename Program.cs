@@ -1,11 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Trakfin.Data;
 using Trakfin.Models;
+using Microsoft.AspNetCore.Identity;
 
  var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<TrakfinContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("TrakfinContext") ?? throw new InvalidOperationException("Connection string 'TrakfinContext' not found.")));
+
+builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<TrakfinContext>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -38,4 +41,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+app.MapRazorPages();
 app.Run();
