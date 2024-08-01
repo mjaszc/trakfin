@@ -10,7 +10,7 @@ using CustomFilter = Trakfin.Models.CustomFilter;
 
 namespace Trakfin.Controllers
 {
-    [Authorize]
+    //[Authorize]
     public class ExpensesController : Controller
     {
         private readonly TrakfinContext _context;

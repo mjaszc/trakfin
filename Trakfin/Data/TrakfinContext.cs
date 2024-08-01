@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Trakfin.Models;
@@ -15,9 +11,9 @@ namespace Trakfin.Data
         {
         }
 
-        public DbSet<Trakfin.Models.Expense> Expense { get; set; }
-        public DbSet<Trakfin.Models.Subscription> Subscription { get; set; }
-        public DbSet<Trakfin.Models.Budget> Budget { get; set; }
-        public DbSet<Trakfin.Models.CustomFilter> CustomFilter { get; set; }
+        public DbSet<Expense> Expense { get; set; }
+        public DbSet<Subscription> Subscription { get; set; }
+        public DbSet<Budget> Budget { get; set; }
+        public DbSet<CustomFilter> CustomFilter { get; set; }
     }
 }

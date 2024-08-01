@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Trakfin.Data;
 using Trakfin.Models;
 
@@ -12,38 +8,56 @@ namespace Trakfin.Controllers
 {
     public class BudgetsController : Controller
     {
-        private readonly TrakfinContext _context;
+        private readonly Uri _baseAddress = new("https://localhost:7181/api");
+        private readonly HttpClient _client;
 
-        public BudgetsController(TrakfinContext context)
+        public BudgetsController()
         {
-            _context = context;
+            _client = new HttpClient
+            {
+                BaseAddress = _baseAddress
+            };
         }
 
         // GET: Budgets
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        public IActionResult Index()
         {
-            return View(await _context.Budget.ToListAsync());
+            List<Budget>? budgetList = new List<Budget>();
+            HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + "/Budgets").Result;
+
+            if (response.IsSuccessStatusCode)
+            {
+                string data = response.Content.ReadAsStringAsync().Result;
+                budgetList = JsonConvert.DeserializeObject<List<Budget>>(data);
+            }
+
+            return View(budgetList);
         }
 
         // GET: Budgets/Details/5
-        public async Task<IActionResult> Details(int? id)
+        [HttpGet]
+        public IActionResult Details(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var budget = await _context.Budget
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (budget == null)
+            Budget? budget = null;
+            HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + $"/Budgets/{id}").Result;
+
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound();
+                string data = response.Content.ReadAsStringAsync().Result;
+                budget = JsonConvert.DeserializeObject<Budget>(data);
             }
 
             return View(budget);
         }
 
         // GET: Budgets/Create
+        [HttpGet]
         public IActionResult Create()
         {
             return View();
@@ -54,30 +68,38 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Category,BudgetAmount,SpentAmount,BudgetPeriod,StartDate,EndDate,Status,Notes,Tags")] Budget budget)
+        public IActionResult Create(Budget budget)
         {
-            if (ModelState.IsValid)
+            string data = JsonConvert.SerializeObject(budget);
+            StringContent content = new StringContent(data, Encoding.UTF8, "application/json");
+            HttpResponseMessage response = _client.PostAsync(_client.BaseAddress + "/Budgets", content).Result;
+
+            if (response.IsSuccessStatusCode)
             {
-                _context.Add(budget);
-                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(budget);
+
+            return View();
         }
 
         // GET: Budgets/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        [HttpGet]
+        public IActionResult Edit(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var budget = await _context.Budget.FindAsync(id);
-            if (budget == null)
+            Budget? budget = null;
+            HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + $"/Budgets/{id}").Result;
+
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound();
+                string data = response.Content.ReadAsStringAsync().Result;
+                budget = JsonConvert.DeserializeObject<Budget>(data);
             }
+
             return View(budget);
         }
 
@@ -86,49 +108,41 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Category,BudgetAmount,SpentAmount,BudgetPeriod,StartDate,EndDate,Status,Notes,Tags")] Budget budget)
+        public IActionResult Edit(int id, Budget budget)
         {
             if (id != budget.Id)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            string data = JsonConvert.SerializeObject(budget);
+            StringContent content = new StringContent(data, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage response = _client.PutAsync(_client.BaseAddress + $"/Budgets/{id}", content).Result;
+
+            if (response.IsSuccessStatusCode)
             {
-                try
-                {
-                    _context.Update(budget);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!BudgetExists(budget.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
                 return RedirectToAction(nameof(Index));
             }
+
             return View(budget);
         }
 
         // GET: Budgets/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public IActionResult Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var budget = await _context.Budget
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (budget == null)
+            Budget? budget = null;
+            HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + $"/Budgets/{id}").Result;
+
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound();
+                string data = response.Content.ReadAsStringAsync().Result;
+                budget = JsonConvert.DeserializeObject<Budget>(data);
             }
 
             return View(budget);
@@ -139,19 +153,14 @@ namespace Trakfin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var budget = await _context.Budget.FindAsync(id);
-            if (budget != null)
+            HttpResponseMessage response = _client.DeleteAsync(_client.BaseAddress + $"/Budgets/{id}").Result;
+
+            if (response.IsSuccessStatusCode)
             {
-                _context.Budget.Remove(budget);
+                return RedirectToAction(nameof(Index));
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool BudgetExists(int id)
-        {
-            return _context.Budget.Any(e => e.Id == id);
+            return View();
         }
     }
 }
