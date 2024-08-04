@@ -21,14 +21,14 @@ namespace Trakfin.Controllers
 
         // GET: Budgets
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            List<Budget>? budgetList = new List<Budget>();
-            HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + "/Budgets").Result;
+            List<Budget>? budgetList = [];
+            var response = await _client.GetAsync(_client.BaseAddress + "/Budgets");
 
             if (response.IsSuccessStatusCode)
             {
-                string data = response.Content.ReadAsStringAsync().Result;
+                var data = response.Content.ReadAsStringAsync().Result;
                 budgetList = JsonConvert.DeserializeObject<List<Budget>>(data);
             }
 
@@ -37,7 +37,7 @@ namespace Trakfin.Controllers
 
         // GET: Budgets/Details/5
         [HttpGet]
-        public IActionResult Details(int? id)
+        public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
             {
@@ -45,11 +45,11 @@ namespace Trakfin.Controllers
             }
 
             Budget? budget = null;
-            HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + $"/Budgets/{id}").Result;
+            var response = await _client.GetAsync(_client.BaseAddress + $"/Budgets/{id}");
 
             if (response.IsSuccessStatusCode)
             {
-                string data = response.Content.ReadAsStringAsync().Result;
+                var data = response.Content.ReadAsStringAsync().Result;
                 budget = JsonConvert.DeserializeObject<Budget>(data);
             }
 
@@ -68,11 +68,11 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Budget budget)
+        public async Task<IActionResult> Create(Budget budget)
         {
-            string data = JsonConvert.SerializeObject(budget);
-            StringContent content = new StringContent(data, Encoding.UTF8, "application/json");
-            HttpResponseMessage response = _client.PostAsync(_client.BaseAddress + "/Budgets", content).Result;
+            var data = JsonConvert.SerializeObject(budget);
+            StringContent content = new(data, Encoding.UTF8, "application/json");
+            var response = await _client.PostAsync(_client.BaseAddress + "/Budgets", content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -84,7 +84,7 @@ namespace Trakfin.Controllers
 
         // GET: Budgets/Edit/5
         [HttpGet]
-        public IActionResult Edit(int? id)
+        public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
@@ -92,7 +92,7 @@ namespace Trakfin.Controllers
             }
 
             Budget? budget = null;
-            HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + $"/Budgets/{id}").Result;
+            var response = await _client.GetAsync(_client.BaseAddress + $"/Budgets/{id}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -108,7 +108,7 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, Budget budget)
+        public async Task<IActionResult> Edit(int id, Budget budget)
         {
             if (id != budget.Id)
             {
@@ -116,9 +116,9 @@ namespace Trakfin.Controllers
             }
 
             string data = JsonConvert.SerializeObject(budget);
-            StringContent content = new StringContent(data, Encoding.UTF8, "application/json");
+            StringContent content = new(data, Encoding.UTF8, "application/json");
 
-            HttpResponseMessage response = _client.PutAsync(_client.BaseAddress + $"/Budgets/{id}", content).Result;
+            var response = await _client.PutAsync(_client.BaseAddress + $"/Budgets/{id}", content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -129,7 +129,7 @@ namespace Trakfin.Controllers
         }
 
         // GET: Budgets/Delete/5
-        public IActionResult Delete(int? id)
+        public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
             {
@@ -137,11 +137,11 @@ namespace Trakfin.Controllers
             }
 
             Budget? budget = null;
-            HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + $"/Budgets/{id}").Result;
+            var response = await _client.GetAsync(_client.BaseAddress + $"/Budgets/{id}");
 
             if (response.IsSuccessStatusCode)
             {
-                string data = response.Content.ReadAsStringAsync().Result;
+                var data = response.Content.ReadAsStringAsync().Result;
                 budget = JsonConvert.DeserializeObject<Budget>(data);
             }
 
@@ -153,7 +153,7 @@ namespace Trakfin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            HttpResponseMessage response = _client.DeleteAsync(_client.BaseAddress + $"/Budgets/{id}").Result;
+            var response = await _client.DeleteAsync(_client.BaseAddress + $"/Budgets/{id}");
 
             if (response.IsSuccessStatusCode)
             {

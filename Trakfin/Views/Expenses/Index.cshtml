@@ -13,11 +13,11 @@
 
 <form asp-controller="Expenses" asp-action="Index" method="get">
     <p>
-        <select asp-for="BankName" asp-items="Model.Banks">
+        <select asp-for="BankName" asp-items="Model.BankList">
             <option value="">Bank Name</option>
         </select>
 
-        <select asp-for="CategoryName" asp-items="Model.Categories">
+        <select asp-for="CategoryName" asp-items="Model.CategoryList">
             <option value="">Category</option>
         </select>
 
@@ -25,9 +25,6 @@
         End Date: <input asp-for="EndDate" type="date" name="EndDate" />
 
         Title: <input asp-for="SearchString" type="text" name="SearchString" />
-        
-        
-
 
         <input type="submit" value="Filter" />
 

@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Globalization;
+using Newtonsoft.Json;
+using System.Text;
 using Trakfin.Data;
-using Trakfin.Migrations;
 using Trakfin.Models;
 using CustomFilter = Trakfin.Models.CustomFilter;
 
@@ -14,102 +14,176 @@ namespace Trakfin.Controllers
     public class ExpensesController : Controller
     {
         private readonly TrakfinContext _context;
+        private readonly Uri _baseAddress = new("https://localhost:7181/api");
+        private readonly HttpClient _client;
 
         public ExpensesController(TrakfinContext context)
         {
             _context = context;
+            _client = new HttpClient
+            {
+                BaseAddress = _baseAddress
+            };
+        }
+
+        // Class to deserialize the budget details (used in HttpGet Create Method)
+        public class BudgetDetail
+        {
+            public int Id { get; set; }
+            public string? NameAndAmount { get; set; }
         }
 
         // GET: Expenses
+        [HttpGet]
         public async Task<IActionResult> Index(string searchString, string bankName, string categoryName, string sortOrder, DateTime? startDate, DateTime? endDate)
         {
             var bankQuery = GetBank();
             var categoryQuery = GetCategory();
-            var expenses = FilterExpenses(searchString, bankName, categoryName, startDate, endDate);
+            var expenses = await FilterExpenses(searchString, bankName, categoryName, startDate, endDate);
             var customFilters = GetCustomFilters();
-            var recurringTransactions = FilterRecurringTransactions(searchString, bankName, categoryName);
-            expenses = SortExpenses(expenses, sortOrder);
+            var recurringTransactions = await FilterRecurringTransactions(searchString, bankName, categoryName);
+            var sortedExpenses = SortExpenses(expenses.AsQueryable(), sortOrder);
 
             var expensesVm = new ExpenseViewModel
             {
-                Expenses = await expenses.ToListAsync(),
+                Expenses = sortedExpenses.ToList(),
                 BudgetNames = await GetBudgetNames(),
-                RecurringTransactions = await recurringTransactions.ToListAsync(),
+                RecurringTransactions = recurringTransactions.ToList(),
                 CustomFilters = await customFilters.ToListAsync(),
-                Banks = new SelectList(await bankQuery.Distinct().ToListAsync()),
-                Categories = new SelectList(await categoryQuery.Distinct().ToListAsync()),
+                BankList = new SelectList((await bankQuery).Distinct().ToList()),
+                CategoryList = new SelectList((await categoryQuery).Distinct().ToList()),
             };
 
             return View(expensesVm);
         }
 
-        private IQueryable<string> GetCategory() =>
-              from e in _context.Expense
-              where e.Category != null
-              orderby e.Category
-              select e.Category;
+        private async Task<List<string>> GetCategory()
+        {
+            var response = await _client.GetAsync(_client.BaseAddress + "/Expenses");
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsStringAsync();
+            var expenses = JsonConvert.DeserializeObject<List<Expense>>(data);
 
-        private IQueryable<string> GetBank() =>
-             from e in _context.Expense
-             where e.Bank != null
-             orderby e.Bank
-             select e.Bank;
+            if (expenses == null)
+            {
+                return [];
+            }
 
-        private IQueryable<Expense> GetExpense() =>
-            from e in _context.Expense
-            select e;
+            return expenses
+                .Where(e => e.Category != null)
+                .OrderBy(e => e.Category)
+                .Select(e => e.Category!)
+                .ToList();
+        }
 
-        private IQueryable<Expense> GetRecurringTransactions() =>
-            from e in _context.Expense
-            where e.Recurring == ExpenseRecurring.Yes
-            /*
-                It displays only the FIRST result that contains the same properties
-                defined in curly braces to avoid duplication when recurring transactions
-                are displayed
-            */
-            group e by new { e.Title, e.Price, e.Category, e.Bank } into x
-            select x.FirstOrDefault();
+        private async Task<List<string>> GetBank()
+        {
+            var response = await _client.GetAsync(_client.BaseAddress + "/Expenses");
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsStringAsync();
+            var expenses = JsonConvert.DeserializeObject<List<Expense>>(data);
 
+            if (expenses == null)
+            {
+                return [];
+            }
+
+            return expenses
+                .Where(e => !string.IsNullOrEmpty(e.Bank))
+                .Select(e => e.Bank!)
+                .Distinct()
+                .ToList();
+        }
+
+        private async Task<IQueryable<Expense>> GetExpense()
+        {
+            var response = await _client.GetAsync(_client.BaseAddress + "/Expenses");
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsStringAsync();
+            var expenses = JsonConvert.DeserializeObject<List<Expense>>(data);
+
+            if (expenses == null)
+            {
+                return new List<Expense>().AsQueryable();
+            }
+
+            return expenses.AsQueryable();
+        }
+
+        private async Task<IQueryable<Expense>> GetRecurringTransactions()
+        {
+            var response = await _client.GetAsync(_client.BaseAddress + "/Expenses");
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsStringAsync();
+            var expenses = JsonConvert.DeserializeObject<List<Expense>>(data);
+
+            if (expenses == null)
+            {
+                return new List<Expense>().AsQueryable();
+            }
+
+            var recurringExpenses = expenses
+                .Where(e => e.Recurring == ExpenseRecurring.Yes)
+                .GroupBy(e => new { e.Title, e.Price, e.Category, e.Bank })
+                .Select(g => g.FirstOrDefault()!)
+                .AsQueryable();
+
+            return recurringExpenses;
+        }
+
+        // MODIFY AFTER ADDING CUSTOM FILTERS TO THE API
+        // THEN DELETE USE OF _CONTEXT
         private IQueryable<CustomFilter> GetCustomFilters() =>
-            from f in _context.CustomFilter
-            select f;
+            _context.CustomFilter;
 
         private async Task<Dictionary<int, string>> GetBudgetNames()
         {
-            return await _context.Expense.Include(e => e.Budget)
-                .ToDictionaryAsync(e => e.Id, e => e.Budget?.Name ?? string.Empty);
+            var response = await _client.GetAsync(_client.BaseAddress + "/Expenses");
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsStringAsync();
+            var expenses = JsonConvert.DeserializeObject<List<Expense>>(data);
+
+            if (expenses == null)
+            {
+                return new Dictionary<int, string>();
+            }
+
+            return expenses
+                .Where(e => e.Budget != null)
+                .ToDictionary(e => e.Id, e => e.Budget!.Name ?? string.Empty);
         }
 
-        private IQueryable<Expense> FilterExpenses(string searchString, string bankName, string categoryName, DateTime? startDate, DateTime? endDate)
+
+        private async Task<IQueryable<Expense>> FilterExpenses(string searchString, string bankName, string categoryName, DateTime? startDate, DateTime? endDate)
         {
-            var expenses = GetExpense();
+            var expenses = await GetExpense();
 
-            if (!String.IsNullOrEmpty(searchString))
+            if (!string.IsNullOrEmpty(searchString))
             {
-                expenses = expenses.Where(s => s.Title != null && s.Title.Contains(searchString));
+                expenses = expenses.Where(e => e.Title != null && e.Title.Contains(searchString));
             }
 
-            if (!String.IsNullOrEmpty(bankName))
+            if (!string.IsNullOrEmpty(bankName))
             {
-                expenses = expenses.Where(x => x.Bank == bankName);
+                expenses = expenses.Where(e => e.Bank == bankName);
             }
 
-            if (!String.IsNullOrEmpty(categoryName))
+            if (!string.IsNullOrEmpty(categoryName))
             {
-                expenses = expenses.Where(z => z.Category == categoryName);
+                expenses = expenses.Where(e => e.Category == categoryName);
             }
 
             if (startDate.HasValue)
             {
-                expenses = expenses.Where(x => x.Date >= startDate);
+                expenses = expenses.Where(e => e.Date >= startDate.Value);
             }
 
             if (endDate.HasValue)
             {
-                expenses = expenses.Where(x => x.Date <= endDate);
+                expenses = expenses.Where(e => e.Date <= endDate.Value);
             }
 
-            return expenses;
+            return expenses.AsQueryable();
         }
 
         private IQueryable<Expense> SortExpenses(IQueryable<Expense> expenses, string sortOrder)
@@ -134,41 +208,36 @@ namespace Trakfin.Controllers
             If yes, alongside with filtered expenses, also above it displays recurring transactions
             with matching one or more than one property
         */
-        private IQueryable<Expense> FilterRecurringTransactions(string searchString, string bankName, string categoryName)
+        private async Task<IQueryable<Expense>> FilterRecurringTransactions(string searchString, string bankName, string categoryName)
         {
-            var expenses = GetExpense();
+            var expenses = await GetExpense();
 
-            if (!String.IsNullOrEmpty(searchString))
+            if (!string.IsNullOrEmpty(searchString))
             {
                 expenses = expenses.Where(s => s.Title != null && s.Title.Contains(searchString) && s.Recurring == ExpenseRecurring.Yes);
             }
 
-            if (!String.IsNullOrEmpty(bankName))
+            if (!string.IsNullOrEmpty(bankName))
             {
                 expenses = expenses.Where(x => x.Bank == bankName && x.Recurring == ExpenseRecurring.Yes);
             }
 
-            if (!String.IsNullOrEmpty(categoryName))
+            if (!string.IsNullOrEmpty(categoryName))
             {
                 expenses = expenses.Where(z => z.Category == categoryName && z.Recurring == ExpenseRecurring.Yes);
             }
 
             // If all arguments are null
-            if (String.IsNullOrEmpty(searchString) && String.IsNullOrEmpty(bankName) && String.IsNullOrEmpty(categoryName))
+            if (string.IsNullOrEmpty(searchString) && string.IsNullOrEmpty(bankName) && string.IsNullOrEmpty(categoryName))
             {
-                expenses = GetRecurringTransactions();
+                expenses = await GetRecurringTransactions();
             }
 
             return expenses;
         }
 
-        [HttpPost]
-        public string Index(string searchString, bool notUsed)
-        {
-            return "From [HttpPost]Index: filter on " + searchString;
-        }
-
         // GET: Expenses/Details/5
+        [HttpGet]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -176,31 +245,32 @@ namespace Trakfin.Controllers
                 return NotFound();
             }
 
-            var expense = await _context.Expense
-                .FirstOrDefaultAsync(m => m.Id == id);
+            Expense? expense = null;
+            var response = await _client.GetAsync(_client.BaseAddress + $"/Expenses/{id}");
 
-            if (expense == null)
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound();
+                var data = await response.Content.ReadAsStringAsync();
+                expense = JsonConvert.DeserializeObject<Expense>(data);
             }
 
             return View(expense);
         }
 
-        // GET: Expenses/Create
+        [HttpGet]
         public async Task<IActionResult> Create(string title = "", decimal price = 0, string bank = "", string category = "", ExpensePaymentMethod? paymentMethod = null, ExpenseRecurring? recurring = null)
         {
+            var response = await _client.GetAsync(_client.BaseAddress + "/Budgets");
 
-            // Fetch the data and project it into the desired format asynchronously
-            var budgetDetails = await _context.Budget
-                .Select(b => new
-                {
-                    b.Id,
-                    NameAndAmount = b.Name + ", " + b.BudgetAmount
-                })
-                .ToListAsync();
+            var data = await response.Content.ReadAsStringAsync();
+            var budgets = JsonConvert.DeserializeObject<List<Budget>>(data);
 
-            // Create a SelectList from the formatted data
+            var budgetDetails = budgets!.Select(b => new BudgetDetail
+            {
+                Id = b.Id,
+                NameAndAmount = $"{b.Name}, {b.BudgetAmount}"
+            }).ToList();
+
             ViewBag.BudgetDetails = new SelectList(budgetDetails, "Id", "NameAndAmount");
 
             // Arguments are passed from Recurring Transaction "Add Transaction" anchor tag,
@@ -224,61 +294,87 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Date,Bank,Price,Category,Note,PaymentMethod,Recurring,MerchantOrVendor,Tags,Status,BudgetId,Budget")] Expense expense)
+        public async Task<IActionResult> Create(Expense expense)
         {
+            var data = JsonConvert.SerializeObject(expense);
+
             if (ModelState.IsValid)
             {
-                _context.Add(expense);
-                
-                if (expense.BudgetId.HasValue)
-                {
-                    var budgetDetails = await _context.Budget
-                        .Where(b => b.Id == expense.BudgetId.Value)
-                        .Select(b => new
-                        {
-                            b.Id,
-                            b.BudgetAmount,
-                            b.SpentAmount
-                        })
-                        .FirstOrDefaultAsync();
+                var budgetResponse = await _client.GetAsync(_client.BaseAddress + "/Budgets");
 
-                    var selectedBudget = await _context.Budget.FirstOrDefaultAsync(b => b.Id == expense.BudgetId.Value);
+                var budgetData = await budgetResponse.Content.ReadAsStringAsync();
+                var budgets = JsonConvert.DeserializeObject<List<Budget>>(budgetData);
 
-                    if (budgetDetails!.BudgetAmount > expense.Price)
+                var budgetDetails = budgets!
+                    .Where(b => b.Id == expense.BudgetId!.Value)
+                    .Select(b => new
                     {
-                        // Console.WriteLine($"BUDGET AMOUNT {budgetDetails!.BudgetAmount} EXPENSE PRICE {expense.Price}");
-                        var updatedBudgetAmount = budgetDetails.BudgetAmount - expense.Price;
+                        b.Id,
+                        b.BudgetAmount,
+                        b.SpentAmount,
+                    })
+                    .FirstOrDefault();
 
-                        selectedBudget!.BudgetAmount = updatedBudgetAmount;
-                        selectedBudget!.SpentAmount += expense.Price;
+                var selectedBudget = budgets!.FirstOrDefault(b => b.Id == expense.BudgetId!.Value);
 
-                        await _context.SaveChangesAsync();
-                    }
+                if (budgetDetails!.BudgetAmount > expense.Price)
+                {
+                    var updatedBudgetAmount = budgetDetails.BudgetAmount - expense.Price;
+
+                    selectedBudget!.BudgetAmount = updatedBudgetAmount;
+                    selectedBudget!.SpentAmount += expense.Price;
+
+                    var updatedBudgetData = JsonConvert.SerializeObject(selectedBudget);
+                    StringContent updatedBudgetContent = new(updatedBudgetData, Encoding.UTF8, "application/json");
+                    var updatedBudgetEditResponse = await _client.PutAsync(_client.BaseAddress + $"/Budgets/{selectedBudget.Id}", updatedBudgetContent);
+                    updatedBudgetEditResponse.EnsureSuccessStatusCode();
                 }
-                await _context.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
+                StringContent content = new(data, Encoding.UTF8, "application/json");
+                var response = await _client.PostAsync(_client.BaseAddress + "/Expenses", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
             }
-            
+
             return View(expense);
         }
 
         // GET: Expenses/Edit/5
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
-            ViewBag.BudgetNames = new SelectList(_context.Budget, "Id", "Name");
-
             if (id == null)
             {
                 return NotFound();
             }
 
-            var expense = await _context.Expense
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (expense == null)
+            var budgetResponse = await _client.GetAsync(_client.BaseAddress + "/Budgets");
+            if (!budgetResponse.IsSuccessStatusCode)
             {
-                return NotFound();
+                return StatusCode((int)budgetResponse.StatusCode);
             }
+
+            var budgetData = await budgetResponse.Content.ReadAsStringAsync();
+            var budgets = JsonConvert.DeserializeObject<List<Budget>>(budgetData);
+            var budgetDetails = budgets!.Select(b => new BudgetDetail
+            {
+                Id = b.Id,
+                NameAndAmount = $"{b.Name}, {b.BudgetAmount}"
+            }).ToList();
+
+            ViewBag.BudgetNames = new SelectList(budgetDetails, "Id", "NameAndAmount");
+
+            Expense? expense = null;
+            var response = await _client.GetAsync(_client.BaseAddress + $"/Expenses/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                var data = await response.Content.ReadAsStringAsync();
+                expense = JsonConvert.DeserializeObject<Expense>(data);
+            }
+
             return View(expense);
         }
 
@@ -287,7 +383,7 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Date,Bank,Price,Category,Note,PaymentMethod,Recurring,MerchantOrVendor,Tags,Status,BudgetId,Budget")] Expense expense)
+        public async Task<IActionResult> Edit(int id, Expense expense)
         {
             if (id != expense.Id)
             {
@@ -298,26 +394,32 @@ namespace Trakfin.Controllers
             {
                 try
                 {
-                    _context.Update(expense);
-                    await _context.SaveChangesAsync();
+                    var data = JsonConvert.SerializeObject(expense);
+                    StringContent content = new(data, Encoding.UTF8, "application/json");
+
+                    var response = await _client.PutAsync(_client.BaseAddress + $"/Expenses/{id}", content);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ExpenseExists(expense.Id))
+                    if (!await ExpenseExists(expense.Id))
                     {
                         return NotFound();
                     }
-                    else
-                    {
-                        throw;
-                    }
+                    
+                    throw;
                 }
-                return RedirectToAction(nameof(Index));
             }
+
             return View(expense);
         }
 
         // GET: Expenses/Delete/5
+        [HttpGet]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -325,11 +427,13 @@ namespace Trakfin.Controllers
                 return NotFound();
             }
 
-            var expense = await _context.Expense
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (expense == null)
+            Expense? expense = null;
+            var response = await _client.GetAsync(_client.BaseAddress + $"/Expenses/{id}");
+
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound();
+                var data = response.Content.ReadAsStringAsync().Result;
+                expense = JsonConvert.DeserializeObject<Expense>(data);
             }
 
             return View(expense);
@@ -340,19 +444,20 @@ namespace Trakfin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var expense = await _context.Expense.FindAsync(id);
-            if (expense != null)
+            var response = await _client.DeleteAsync(_client.BaseAddress + $"/Expenses/{id}");
+
+            if (response.IsSuccessStatusCode)
             {
-                _context.Expense.Remove(expense);
+                return RedirectToAction(nameof(Index));
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return View();
         }
 
-        private bool ExpenseExists(int id)
+        private async Task<bool> ExpenseExists(int id)
         {
-            return _context.Expense.Any(e => e.Id == id);
+            var response = await _client.GetAsync(_client.BaseAddress + $"/Expenses/{id}");
+            return response.IsSuccessStatusCode;
         }
     }
 }

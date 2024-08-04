@@ -10,7 +10,7 @@ namespace TrakfinAPI.Data
         {
         }
 
-        public DbSet<Expense> Expenses { get; set; } = null!;
+        public DbSet<Expense> Expense { get; set; } = null!;
         public DbSet<Budget> Budget { get; set; } = default!;
     }
 }

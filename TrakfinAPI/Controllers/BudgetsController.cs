@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TrakfinAPI.Data;
 using TrakfinAPI.Models;
@@ -12,27 +7,20 @@ namespace TrakfinAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BudgetsController : ControllerBase
+    public class BudgetsController(TrakfinAPIContext context) : ControllerBase
     {
-        private readonly TrakfinAPIContext _context;
-
-        public BudgetsController(TrakfinAPIContext context)
-        {
-            _context = context;
-        }
-
         // GET: api/Budgets
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Budget>>> GetBudget()
         {
-            return await _context.Budget.ToListAsync();
+            return await context.Budget.ToListAsync();
         }
 
         // GET: api/Budgets/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Budget>> GetBudget(int id)
         {
-            var budget = await _context.Budget.FindAsync(id);
+            var budget = await context.Budget.FindAsync(id);
 
             if (budget == null)
             {
@@ -52,11 +40,11 @@ namespace TrakfinAPI.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(budget).State = EntityState.Modified;
+            context.Entry(budget).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -78,8 +66,8 @@ namespace TrakfinAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Budget>> PostBudget(Budget budget)
         {
-            _context.Budget.Add(budget);
-            await _context.SaveChangesAsync();
+            context.Budget.Add(budget);
+            await context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetBudget), new { id = budget.Id }, budget);
         }
@@ -88,21 +76,21 @@ namespace TrakfinAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBudget(int id)
         {
-            var budget = await _context.Budget.FindAsync(id);
+            var budget = await context.Budget.FindAsync(id);
             if (budget == null)
             {
                 return NotFound();
             }
 
-            _context.Budget.Remove(budget);
-            await _context.SaveChangesAsync();
+            context.Budget.Remove(budget);
+            await context.SaveChangesAsync();
 
             return NoContent();
         }
 
         private bool BudgetExists(int id)
         {
-            return _context.Budget.Any(e => e.Id == id);
+            return context.Budget.Any(e => e.Id == id);
         }
     }
 }

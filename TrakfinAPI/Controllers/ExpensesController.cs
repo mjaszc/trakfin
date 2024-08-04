@@ -25,14 +25,14 @@ namespace TrakfinAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Expense>>> GetExpenses()
         {
-            return await _context.Expenses.ToListAsync();
+            return await _context.Expense.ToListAsync();
         }
 
         // GET: api/Expenses/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Expense>> GetExpense(int id)
         {
-            var expense = await _context.Expenses.FindAsync(id);
+            var expense = await _context.Expense.FindAsync(id);
 
             if (expense == null)
             {
@@ -78,7 +78,7 @@ namespace TrakfinAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Expense>> PostExpense(Expense expense)
         {
-            _context.Expenses.Add(expense);
+            _context.Expense.Add(expense);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetExpense), new { id = expense.Id }, expense);
@@ -88,13 +88,13 @@ namespace TrakfinAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteExpense(int id)
         {
-            var expense = await _context.Expenses.FindAsync(id);
+            var expense = await _context.Expense.FindAsync(id);
             if (expense == null)
             {
                 return NotFound();
             }
 
-            _context.Expenses.Remove(expense);
+            _context.Expense.Remove(expense);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -102,7 +102,7 @@ namespace TrakfinAPI.Controllers
 
         private bool ExpenseExists(int id)
         {
-            return _context.Expenses.Any(e => e.Id == id);
+            return _context.Expense.Any(e => e.Id == id);
         }
     }
 }
