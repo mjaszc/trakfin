@@ -1,31 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Trakfin.Data;
-using Trakfin.Models;
+using Newtonsoft.Json;
+using System.Text;
+using CustomFilter = Trakfin.Models.CustomFilter;
 
 namespace Trakfin.Controllers
 {
     public class CustomFiltersController : Controller
     {
-        private readonly TrakfinContext _context;
+        private readonly Uri _baseAddress = new("https://localhost:7181/api");
+        private readonly HttpClient _client;
 
-        public CustomFiltersController(TrakfinContext context)
+        public CustomFiltersController()
         {
-            _context = context;
+            _client = new HttpClient
+            {
+                BaseAddress = _baseAddress
+            };
         }
 
         // GET: CustomFilters
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
-            return View(await _context.CustomFilter.ToListAsync());
+            List<CustomFilter>? filterList = [];
+            var response = await _client.GetAsync(_client.BaseAddress + "/CustomFilters");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var data = response.Content.ReadAsStringAsync().Result;
+                filterList = JsonConvert.DeserializeObject<List<CustomFilter>>(data);
+            }
+
+            return View(filterList);
         }
 
         // GET: CustomFilters/Details/5
+        [HttpGet]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -33,17 +44,20 @@ namespace Trakfin.Controllers
                 return NotFound();
             }
 
-            var customFilter = await _context.CustomFilter
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (customFilter == null)
+            CustomFilter? filter = null;
+            var response = await _client.GetAsync(_client.BaseAddress + $"/CustomFilters/{id}");
+
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound();
+                var data = response.Content.ReadAsStringAsync().Result;
+                filter = JsonConvert.DeserializeObject<CustomFilter>(data);
             }
 
-            return View(customFilter);
+            return View(filter);
         }
 
         // GET: CustomFilters/Create
+        [HttpGet]
         public IActionResult Create(string bankName, string categoryName, DateTime? startDate, DateTime? endDate, string searchString)
         {
             var model = new CustomFilter
@@ -63,18 +77,22 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Bank,Category,StartDate,EndDate,Title")] CustomFilter customFilter)
+        public async Task<IActionResult> Create(CustomFilter customFilter)
         {
-            if (ModelState.IsValid)
+            var data = JsonConvert.SerializeObject(customFilter);
+            StringContent content = new(data, Encoding.UTF8, "application/json");
+            var response = await _client.PostAsync(_client.BaseAddress + "/CustomFilters", content);
+
+            if (response.IsSuccessStatusCode)
             {
-                _context.Add(customFilter);
-                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(customFilter);
+
+            return View();
         }
 
         // GET: CustomFilters/Edit/5
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -82,12 +100,16 @@ namespace Trakfin.Controllers
                 return NotFound();
             }
 
-            var customFilter = await _context.CustomFilter.FindAsync(id);
-            if (customFilter == null)
+            CustomFilter? budget = null;
+            var response = await _client.GetAsync(_client.BaseAddress + $"/CustomFilters/{id}");
+
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound();
+                string data = response.Content.ReadAsStringAsync().Result;
+                budget = JsonConvert.DeserializeObject<CustomFilter>(data);
             }
-            return View(customFilter);
+
+            return View(budget);
         }
 
         // POST: CustomFilters/Edit/5
@@ -95,7 +117,7 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Bank,Category,StartDate,EndDate,Title")] CustomFilter customFilter)
+        public async Task<IActionResult> Edit(int id, CustomFilter customFilter)
         {
             if (id != customFilter.Id)
             {
@@ -106,22 +128,27 @@ namespace Trakfin.Controllers
             {
                 try
                 {
-                    _context.Update(customFilter);
-                    await _context.SaveChangesAsync();
+                    var data = JsonConvert.SerializeObject(customFilter);
+                    StringContent content = new(data, Encoding.UTF8, "application/json");
+
+                    var response = await _client.PutAsync(_client.BaseAddress + $"/CustomFilters/{id}", content);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!CustomFilterExists(customFilter.Id))
+                    if (!await CustomFilterExists(customFilter.Id))
                     {
                         return NotFound();
                     }
-                    else
-                    {
-                        throw;
-                    }
+
+                    throw;
                 }
-                return RedirectToAction(nameof(Index));
             }
+
             return View(customFilter);
         }
 
@@ -133,14 +160,16 @@ namespace Trakfin.Controllers
                 return NotFound();
             }
 
-            var customFilter = await _context.CustomFilter
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (customFilter == null)
+            CustomFilter? filter = null;
+            var response = await _client.GetAsync(_client.BaseAddress + $"/CustomFilters/{id}");
+
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound();
+                var data = response.Content.ReadAsStringAsync().Result;
+                filter = JsonConvert.DeserializeObject<CustomFilter>(data);
             }
 
-            return View(customFilter);
+            return View(filter);
         }
 
         // POST: CustomFilters/Delete/5
@@ -148,19 +177,20 @@ namespace Trakfin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var customFilter = await _context.CustomFilter.FindAsync(id);
-            if (customFilter != null)
+            var response = await _client.DeleteAsync(_client.BaseAddress + $"/CustomFilters/{id}");
+
+            if (response.IsSuccessStatusCode)
             {
-                _context.CustomFilter.Remove(customFilter);
+                return RedirectToAction(nameof(Index));
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return View();
         }
 
-        private bool CustomFilterExists(int id)
+        private async Task<bool> CustomFilterExists(int id)
         {
-            return _context.CustomFilter.Any(e => e.Id == id);
+            var response = await _client.GetAsync(_client.BaseAddress + $"/CustomFilters/{id}");
+            return response.IsSuccessStatusCode;
         }
     }
 }

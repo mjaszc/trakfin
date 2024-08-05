@@ -257,6 +257,7 @@ namespace Trakfin.Controllers
             return View(expense);
         }
 
+        // GET: Expenses/Create
         [HttpGet]
         public async Task<IActionResult> Create(string title = "", decimal price = 0, string bank = "", string category = "", ExpensePaymentMethod? paymentMethod = null, ExpenseRecurring? recurring = null)
         {
