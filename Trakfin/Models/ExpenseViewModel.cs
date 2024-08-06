@@ -20,5 +20,4 @@ namespace Trakfin.Models
 
         public Dictionary<int, string>? BudgetNames { get; set; }
     }
-        
 }

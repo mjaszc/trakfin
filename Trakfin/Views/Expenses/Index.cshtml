@@ -11,6 +11,21 @@
     <a asp-action="Create">Create New</a>
 </p>
 
+@if (@TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <p>@TempData["ErrorMessage"]</p>
+    </div>
+}
+
+@if (@TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        <p>@TempData["SuccessMessage"]</p>
+    </div>
+}
+
+
 <form asp-controller="Expenses" asp-action="Index" method="get">
     <p>
         <select asp-for="BankName" asp-items="Model.BankList">
@@ -29,16 +44,16 @@
         <input type="submit" value="Filter" />
 
         <a asp-area="" asp-controller="Expenses" asp-action="Index">Clear all filters</a>
-        
+
     </p>
 </form>
 
-<a href="@Url.Action("Create", "CustomFilters", new { 
-             BankName = Context.Request.Query["BankName"], 
-             CategoryName = Context.Request.Query["CategoryName"], 
-             StartDate = Context.Request.Query["StartDate"], 
-             EndDate = Context.Request.Query["EndDate"], 
-             SearchString = Context.Request.Query["SearchString"] 
+<a href="@Url.Action("Create", "CustomFilters", new {
+             BankName = Context.Request.Query["BankName"],
+             CategoryName = Context.Request.Query["CategoryName"],
+             StartDate = Context.Request.Query["StartDate"],
+             EndDate = Context.Request.Query["EndDate"],
+             SearchString = Context.Request.Query["SearchString"]
          })">Create custom filter from applied filters</a>
 
 @if (Model.CustomFilters != null && Model.CustomFilters.Any())

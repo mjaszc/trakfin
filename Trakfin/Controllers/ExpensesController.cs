@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.Text;
-using Trakfin.Data;
 using Trakfin.Models;
 using CustomFilter = Trakfin.Models.CustomFilter;
 
@@ -13,13 +12,11 @@ namespace Trakfin.Controllers
     //[Authorize]
     public class ExpensesController : Controller
     {
-        private readonly TrakfinContext _context;
         private readonly Uri _baseAddress = new("https://localhost:7181/api");
         private readonly HttpClient _client;
 
-        public ExpensesController(TrakfinContext context)
+        public ExpensesController()
         {
-            _context = context;
             _client = new HttpClient
             {
                 BaseAddress = _baseAddress
@@ -37,21 +34,34 @@ namespace Trakfin.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(string searchString, string bankName, string categoryName, string sortOrder, DateTime? startDate, DateTime? endDate)
         {
-            var bankQuery = GetBank();
-            var categoryQuery = GetCategory();
-            var expenses = await FilterExpenses(searchString, bankName, categoryName, startDate, endDate);
-            var customFilters = GetCustomFilters();
-            var recurringTransactions = await FilterRecurringTransactions(searchString, bankName, categoryName);
-            var sortedExpenses = SortExpenses(expenses.AsQueryable(), sortOrder);
+            if (startDate.HasValue && endDate.HasValue && startDate > endDate)
+            {
+                TempData["ErrorMessage"] = "Start date cannot be later than end date.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Tasks to perform before the page loads
+            var bankListTask = GetBankNames();
+            var categoryListTask = GetCategory(); 
+            var expensesTask = FilterExpenses(searchString, bankName, categoryName, startDate, endDate); // Responsible for displaying expenses on the Index page
+            var customFiltersTask = GetCustomFilters();
+            var recurringTransactionsTask = FilterRecurringTransactions(searchString, bankName, categoryName);
+            var budgetNamesTask = GetBudgetNames();
+
+            await Task.WhenAll(bankListTask, categoryListTask, expensesTask, customFiltersTask, recurringTransactionsTask, budgetNamesTask);
 
             var expensesVm = new ExpenseViewModel
             {
-                Expenses = sortedExpenses.ToList(),
-                BudgetNames = await GetBudgetNames(),
-                RecurringTransactions = recurringTransactions.ToList(),
-                CustomFilters = await customFilters.ToListAsync(),
-                BankList = new SelectList((await bankQuery).Distinct().ToList()),
-                CategoryList = new SelectList((await categoryQuery).Distinct().ToList()),
+                BankList = new SelectList((await bankListTask).Distinct().ToList()),
+                CategoryList = new SelectList((await categoryListTask).Distinct().ToList()),
+
+                Expenses = OrderExpensesByCriteria((await expensesTask).AsQueryable(), sortOrder).ToList(),
+
+                CustomFilters = (await customFiltersTask).ToList(),
+                RecurringTransactions = (await recurringTransactionsTask).ToList(),
+
+                // Display names in column called "Budget"
+                BudgetNames = await budgetNamesTask,
             };
 
             return View(expensesVm);
@@ -76,7 +86,7 @@ namespace Trakfin.Controllers
                 .ToList();
         }
 
-        private async Task<List<string>> GetBank()
+        private async Task<List<string>> GetBankNames()
         {
             var response = await _client.GetAsync(_client.BaseAddress + "/Expenses");
             response.EnsureSuccessStatusCode();
@@ -131,10 +141,21 @@ namespace Trakfin.Controllers
             return recurringExpenses;
         }
 
-        // MODIFY AFTER ADDING CUSTOM FILTERS TO THE API
-        // THEN DELETE USE OF _CONTEXT
-        private IQueryable<CustomFilter> GetCustomFilters() =>
-            _context.CustomFilter;
+        private async Task<IQueryable<CustomFilter>> GetCustomFilters()
+        {
+            var response = await _client.GetAsync(_client.BaseAddress + "/CustomFilters");
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsStringAsync();
+            var filters = JsonConvert.DeserializeObject<List<CustomFilter>>(data);
+
+            if (filters == null)
+            {
+                return new List<CustomFilter>().AsQueryable();
+            }
+
+            return filters.AsQueryable();
+        }
+
 
         private async Task<Dictionary<int, string>> GetBudgetNames()
         {
@@ -186,7 +207,7 @@ namespace Trakfin.Controllers
             return expenses.AsQueryable();
         }
 
-        private IQueryable<Expense> SortExpenses(IQueryable<Expense> expenses, string sortOrder)
+        private IQueryable<Expense> OrderExpensesByCriteria(IQueryable<Expense> expenses, string sortOrder)
         {
             ViewData["TitleSortParm"] = sortOrder == "Title" ? "Title_desc" : "Title";
             ViewData["DateSortParm"] = sortOrder == "Date" ? "Date_desc" : "Date";
@@ -242,7 +263,8 @@ namespace Trakfin.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "Expense ID is required.";
+                return RedirectToAction(nameof(Index));
             }
 
             Expense? expense = null;
@@ -253,6 +275,11 @@ namespace Trakfin.Controllers
                 var data = await response.Content.ReadAsStringAsync();
                 expense = JsonConvert.DeserializeObject<Expense>(data);
             }
+            else
+            {
+                TempData["ErrorMessage"] = "Expense not found.";
+                return RedirectToAction(nameof(Index));
+            }
 
             return View(expense);
         }
@@ -262,11 +289,20 @@ namespace Trakfin.Controllers
         public async Task<IActionResult> Create(string title = "", decimal price = 0, string bank = "", string category = "", ExpensePaymentMethod? paymentMethod = null, ExpenseRecurring? recurring = null)
         {
             var response = await _client.GetAsync(_client.BaseAddress + "/Budgets");
+            List<Budget>? budgets = null;
 
-            var data = await response.Content.ReadAsStringAsync();
-            var budgets = JsonConvert.DeserializeObject<List<Budget>>(data);
+            if (response.IsSuccessStatusCode)
+            {
+                var data = await response.Content.ReadAsStringAsync();
+                budgets = JsonConvert.DeserializeObject<List<Budget>>(data);
+            }
 
-            var budgetDetails = budgets!.Select(b => new BudgetDetail
+            if (budgets == null)
+            {
+                budgets = new List<Budget>();
+            }
+
+            var budgetDetails = budgets.Select(b => new BudgetDetail
             {
                 Id = b.Id,
                 NameAndAmount = $"{b.Name}, {b.BudgetAmount}"
@@ -303,6 +339,12 @@ namespace Trakfin.Controllers
             {
                 var budgetResponse = await _client.GetAsync(_client.BaseAddress + "/Budgets");
 
+                if (!budgetResponse.IsSuccessStatusCode)
+                {
+                    TempData["ErrorMessage"] = "Failed to fetch budget data from API.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 var budgetData = await budgetResponse.Content.ReadAsStringAsync();
                 var budgets = JsonConvert.DeserializeObject<List<Budget>>(budgetData);
 
@@ -316,19 +358,24 @@ namespace Trakfin.Controllers
                     })
                     .FirstOrDefault();
 
-                var selectedBudget = budgets!.FirstOrDefault(b => b.Id == expense.BudgetId!.Value);
-
-                if (budgetDetails!.BudgetAmount > expense.Price)
+                if (budgetDetails != null && budgetDetails!.BudgetAmount > expense.Price)
                 {
+                    var selectedBudget = budgets!.FirstOrDefault(b => b.Id == expense.BudgetId!.Value);
                     var updatedBudgetAmount = budgetDetails.BudgetAmount - expense.Price;
 
+                    // Updates in the Budget model
                     selectedBudget!.BudgetAmount = updatedBudgetAmount;
                     selectedBudget!.SpentAmount += expense.Price;
 
                     var updatedBudgetData = JsonConvert.SerializeObject(selectedBudget);
                     StringContent updatedBudgetContent = new(updatedBudgetData, Encoding.UTF8, "application/json");
                     var updatedBudgetEditResponse = await _client.PutAsync(_client.BaseAddress + $"/Budgets/{selectedBudget.Id}", updatedBudgetContent);
-                    updatedBudgetEditResponse.EnsureSuccessStatusCode();
+
+                    if (!updatedBudgetEditResponse.IsSuccessStatusCode)
+                    {
+                        TempData["ErrorMessage"] = "There was an error with modifying budget model.";
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
 
                 StringContent content = new(data, Encoding.UTF8, "application/json");
@@ -336,6 +383,7 @@ namespace Trakfin.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
+                    TempData["SuccessMessage"] = "Expense has been successfully created.";
                     return RedirectToAction(nameof(Index));
                 }
             }
@@ -349,13 +397,16 @@ namespace Trakfin.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "Expense ID is required.";
+                return RedirectToAction(nameof(Index));
             }
 
             var budgetResponse = await _client.GetAsync(_client.BaseAddress + "/Budgets");
+
             if (!budgetResponse.IsSuccessStatusCode)
             {
-                return StatusCode((int)budgetResponse.StatusCode);
+                TempData["ErrorMessage"] = "Failed to fetch budget data from API.";
+                return RedirectToAction(nameof(Index));
             }
 
             var budgetData = await budgetResponse.Content.ReadAsStringAsync();
@@ -370,10 +421,20 @@ namespace Trakfin.Controllers
 
             Expense? expense = null;
             var response = await _client.GetAsync(_client.BaseAddress + $"/Expenses/{id}");
-            if (response.IsSuccessStatusCode)
+            
+            if (!response.IsSuccessStatusCode)
             {
-                var data = await response.Content.ReadAsStringAsync();
-                expense = JsonConvert.DeserializeObject<Expense>(data);
+                TempData["ErrorMessage"] = "Expense not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var data = await response.Content.ReadAsStringAsync();
+            expense = JsonConvert.DeserializeObject<Expense>(data);
+
+            if (expense == null)
+            {
+                TempData["ErrorMessage"] = "Failed to deserialize expense data.";
+                return RedirectToAction(nameof(Index));
             }
 
             return View(expense);
@@ -402,8 +463,12 @@ namespace Trakfin.Controllers
 
                     if (response.IsSuccessStatusCode)
                     {
+                        TempData["SuccessMessage"] = "Expense has been successfully modified.";
                         return RedirectToAction(nameof(Index));
                     }
+
+                    TempData["ErrorMessage"] = "Could not find the expense you want to edit.";
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -411,7 +476,7 @@ namespace Trakfin.Controllers
                     {
                         return NotFound();
                     }
-                    
+
                     throw;
                 }
             }
@@ -425,7 +490,8 @@ namespace Trakfin.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "Please add the ID of the expense you want to delete.";
+                return RedirectToAction(nameof(Index));
             }
 
             Expense? expense = null;
@@ -436,6 +502,11 @@ namespace Trakfin.Controllers
                 var data = response.Content.ReadAsStringAsync().Result;
                 expense = JsonConvert.DeserializeObject<Expense>(data);
             }
+            else
+            {
+                TempData["ErrorMessage"] = "Could not find the expense you want to delete.";
+                return RedirectToAction(nameof(Index));
+            }
 
             return View(expense);
         }
@@ -445,10 +516,17 @@ namespace Trakfin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (id <= 0)
+            {
+                TempData["ErrorMessage"] = "Invalid expense ID.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var response = await _client.DeleteAsync(_client.BaseAddress + $"/Expenses/{id}");
 
             if (response.IsSuccessStatusCode)
             {
+                TempData["SuccessMessage"] = "Expense has been successfully deleted.";
                 return RedirectToAction(nameof(Index));
             }
 
