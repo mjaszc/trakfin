@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Trakfin.Data;
 using Trakfin.Models;
 
@@ -12,34 +14,49 @@ namespace Trakfin.Controllers
 {
     public class SubscriptionsController : Controller
     {
-        private readonly TrakfinContext _context;
+        private readonly Uri _baseAddress = new("https://localhost:7181/api");
+        private readonly HttpClient _client;
 
-        public SubscriptionsController(TrakfinContext context)
+        public SubscriptionsController()
         {
-            _context = context;
+            _client = new HttpClient
+            {
+                BaseAddress = _baseAddress
+            };
         }
 
         // GET: Subscriptions
         public async Task<IActionResult> Index(string searchString)
         {
-            var subscriptions = FilterSubscriptions(searchString);
-
-            var subscriptionsVm = new SubscriptionViewModel { Subscriptions = await subscriptions.ToListAsync() };
+            var subscriptions = await FilterSubscriptions(searchString);
+            var subscriptionsList = subscriptions.ToList();
+            var subscriptionsVm = new SubscriptionViewModel { Subscriptions = subscriptionsList };
 
             return View(subscriptionsVm);
         }
 
-        private IQueryable<Subscription> GetSubscriptions() =>
-            from s in _context.Subscription
-            select s;
-
-        private IQueryable<Subscription> FilterSubscriptions(string searchString)
+        private async Task<IQueryable<Subscription>> GetSubscriptions()
         {
-            var subscriptions = GetSubscriptions();
+            var response = await _client.GetAsync(_client.BaseAddress + "/Subscriptions");
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsStringAsync();
+            var subscriptions = JsonConvert.DeserializeObject<List<Subscription>>(data);
 
-            if (!String.IsNullOrEmpty(searchString))
+            if (subscriptions == null)
             {
-                subscriptions = subscriptions.Where(s => s.Name == searchString);
+                return new List<Subscription>().AsQueryable();
+            }
+
+            return subscriptions.AsQueryable();
+        }
+
+        private async Task<IQueryable<Subscription>> FilterSubscriptions(string searchString)
+        {
+            var subscriptions = await GetSubscriptions();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                subscriptions = subscriptions.Where(s => s.Name!.Contains(searchString, StringComparison.OrdinalIgnoreCase));
             }
 
             return subscriptions;
@@ -53,14 +70,16 @@ namespace Trakfin.Controllers
                 return NotFound();
             }
 
-            var subscription = await _context.Subscription
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (subscription == null)
+            Subscription? sub = null;
+            var response = await _client.GetAsync(_client.BaseAddress + $"/Subscriptions/{id}");
+
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound();
+                var data = response.Content.ReadAsStringAsync().Result;
+                sub = JsonConvert.DeserializeObject<Subscription>(data);
             }
 
-            return View(subscription);
+            return View(sub);
         }
 
         // GET: Subscriptions/Create
@@ -74,15 +93,18 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Category,Price,BillingCycle,NextBillingDate,StartDate,Status,PaymentMethod,CancellationPolicy,Notes,Provider,User,Duration,Discount")] Subscription subscription)
+        public async Task<IActionResult> Create(Subscription subscription)
         {
-            if (ModelState.IsValid)
+            var data = JsonConvert.SerializeObject(subscription);
+            StringContent content = new(data, Encoding.UTF8, "application/json");
+            var response = await _client.PostAsync(_client.BaseAddress + "/Subscriptions", content);
+
+            if (response.IsSuccessStatusCode)
             {
-                _context.Add(subscription);
-                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(subscription);
+
+            return View();
         }
 
         // GET: Subscriptions/Edit/5
@@ -93,12 +115,16 @@ namespace Trakfin.Controllers
                 return NotFound();
             }
 
-            var subscription = await _context.Subscription.FindAsync(id);
-            if (subscription == null)
+            Subscription? sub = null;
+            var response = await _client.GetAsync(_client.BaseAddress + $"/Subscriptions/{id}");
+
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound();
+                string data = response.Content.ReadAsStringAsync().Result;
+                sub = JsonConvert.DeserializeObject<Subscription>(data);
             }
-            return View(subscription);
+
+            return View(sub);
         }
 
         // POST: Subscriptions/Edit/5
@@ -106,33 +132,23 @@ namespace Trakfin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Category,Price,BillingCycle,NextBillingDate,StartDate,Status,PaymentMethod,CancellationPolicy,Notes,Provider,User,Duration,Discount")] Subscription subscription)
+        public async Task<IActionResult> Edit(int id, Subscription subscription)
         {
             if (id != subscription.Id)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            string data = JsonConvert.SerializeObject(subscription);
+            StringContent content = new(data, Encoding.UTF8, "application/json");
+
+            var response = await _client.PutAsync(_client.BaseAddress + $"/Subscriptions/{id}", content);
+
+            if (response.IsSuccessStatusCode)
             {
-                try
-                {
-                    _context.Update(subscription);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!SubscriptionExists(subscription.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
                 return RedirectToAction(nameof(Index));
             }
+
             return View(subscription);
         }
 
@@ -144,14 +160,16 @@ namespace Trakfin.Controllers
                 return NotFound();
             }
 
-            var subscription = await _context.Subscription
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (subscription == null)
+            Subscription? sub = null;
+            var response = await _client.GetAsync(_client.BaseAddress + $"/Subscriptions/{id}");
+
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound();
+                string data = response.Content.ReadAsStringAsync().Result;
+                sub = JsonConvert.DeserializeObject<Subscription>(data);
             }
 
-            return View(subscription);
+            return View(sub);
         }
 
         // POST: Subscriptions/Delete/5
@@ -159,19 +177,14 @@ namespace Trakfin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var subscription = await _context.Subscription.FindAsync(id);
-            if (subscription != null)
+            var response = await _client.DeleteAsync(_client.BaseAddress + $"/Subscriptions/{id}");
+
+            if (response.IsSuccessStatusCode)
             {
-                _context.Subscription.Remove(subscription);
+                return RedirectToAction(nameof(Index));
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool SubscriptionExists(int id)
-        {
-            return _context.Subscription.Any(e => e.Id == id);
+            return View();
         }
     }
 }
