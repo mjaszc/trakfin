@@ -8,11 +8,14 @@ namespace Trakfin.Controllers
 {
     public class BudgetsController : Controller
     {
-        private readonly Uri _baseAddress = new("https://localhost:7181/api");
+        private readonly IConfiguration _config;
         private readonly HttpClient _client;
+        private readonly Uri _baseAddress;
 
-        public BudgetsController()
+        public BudgetsController(IConfiguration config)
         {
+            _config = config;
+            _baseAddress = new Uri(_config["API_URL"] ?? throw new ArgumentNullException(_config["API_URL"]));
             _client = new HttpClient
             {
                 BaseAddress = _baseAddress

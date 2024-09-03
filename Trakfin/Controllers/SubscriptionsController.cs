@@ -14,16 +14,20 @@ namespace Trakfin.Controllers
 {
     public class SubscriptionsController : Controller
     {
-        private readonly Uri _baseAddress = new("https://localhost:7181/api");
+        private readonly IConfiguration _config;
         private readonly HttpClient _client;
+        private readonly Uri _baseAddress;
 
-        public SubscriptionsController()
+        public SubscriptionsController(IConfiguration config)
         {
+            _config = config;
+            _baseAddress = new Uri(_config["API_URL"] ?? throw new ArgumentNullException(_config["API_URL"]));
             _client = new HttpClient
             {
                 BaseAddress = _baseAddress
             };
         }
+
 
         // GET: Subscriptions
         public async Task<IActionResult> Index(string searchString)
