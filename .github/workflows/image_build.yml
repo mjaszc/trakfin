@@ -21,6 +21,7 @@ jobs:
         - uses: actions/checkout@v2
         - name: Build TrakfinAPI Docker Image
           run: |
+            ls -la
             docker build -t trakfinapi ../TrakfinAPI
 
         - name: Tag and Push TrakfinAPI Docker Image to Docker Hub
