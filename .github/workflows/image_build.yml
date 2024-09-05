@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
       
-      - name: Build Docker Image
+      - name: Build TrakfinAPI Docker Image
         run: |
           ls -la
           docker build -t trakfinapi ./TrakfinAPI
@@ -25,3 +25,13 @@ jobs:
         run: |
           docker tag trakfinapi ${{ secrets.DOCKERHUB_USERNAME }}/trakfinapi:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/trakfinapi:latest
+
+      - name: Build Trakfin Web Docker Image
+        run: |
+          ls -la
+          docker build -t trakfinweb ./Trakfin
+
+      - name: Tag and Push Trakfin Web Docker Image to Docker Hub
+        run: |
+          docker tag trakfinweb ${{ secrets.DOCKERHUB_USERNAME }}/trakfinweb:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/trakfinweb:latest
