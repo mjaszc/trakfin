@@ -22,7 +22,7 @@ jobs:
         - name: Build TrakfinAPI Docker Image
           run: |
             ls -la
-            docker build -t trakfinapi ../TrakfinAPI
+            docker build -t trakfinapi ./TrakfinAPI
 
         - name: Tag and Push TrakfinAPI Docker Image to Docker Hub
           run: |
