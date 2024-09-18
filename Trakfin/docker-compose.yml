@@ -5,26 +5,24 @@ services:
       context: ../TrakfinAPI
       dockerfile: Dockerfile
     ports:
-    - "8080:8080"
+      - "8080:8080"
   sql:
     image: "mcr.microsoft.com/mssql/server:2022-latest"
     user: root
     container_name: sql_server2022
     volumes:
-     - "./data-mssql:/var/opt/mssql/data"
+      - "./data-mssql:/var/opt/mssql/data"
     ports:
       - "1434:1433"
     environment:
       - ACCEPT_EULA=y
-      # Visible password, but it's a LOCAL development environment
-      - SA_PASSWORD=A&VeryComplex123Password
   trakfinweb:
     image: ${DOCKER_REGISTRY-}trakfinweb
     build:
-        context: ../Trakfin
-        dockerfile: Dockerfile
+      context: ../Trakfin
+      dockerfile: Dockerfile
     ports:
-        - "8081:8081"
+      - "8081:8081"
     depends_on:
-        - trakfinapi
-        - sql 
+      - trakfinapi
+      - sql

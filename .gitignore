@@ -406,3 +406,5 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+/infra/export_terraform_secrets.sh
