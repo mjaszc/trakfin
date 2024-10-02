@@ -1,28 +1,39 @@
 services:
   trakfinapi:
     image: ${DOCKER_REGISTRY-}trakfinapi
+    container_name: trakfin-api
     build:
       context: ../TrakfinAPI
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-  sql:
-    image: "mcr.microsoft.com/mssql/server:2022-latest"
-    user: root
-    container_name: sql_server2022
-    volumes:
-      - "./data-mssql:/var/opt/mssql/data"
-    ports:
-      - "1434:1433"
     environment:
-      - ACCEPT_EULA=y
+      - ConnectionStrings__TrakfinContext=${CONNECTION_STRING}
+
+  # Local DB
+  # sql:
+  #   image: "mcr.microsoft.com/mssql/server:2022-latest"
+  #   container_name: sql_server2022
+  #   user: root
+  #   volumes:
+  #     - ./data-mssql:/var/opt/mssql/data
+  #   ports:
+  #     - "1433:1433"
+  #   environment:
+  #     - ACCEPT_EULA=y
+  #     - MSSQL_SA_PASSWORD=A&VeryComplex123Password
+  #     - ConnectionString=Server=sql_server2022;Database=trakfin;User Id=sa;Password=A&VeryComplex123Password;
+
   trakfinweb:
     image: ${DOCKER_REGISTRY-}trakfinweb
+    container_name: trakfin-web
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
+    environment:
+      - ConnectionStrings__TrakfinContext=${CONNECTION_STRING}
+      - API_URL=${API_URL}
     depends_on:
       - trakfinapi
-      - sql

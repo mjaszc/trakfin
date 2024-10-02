@@ -408,3 +408,4 @@ override.tf.json
 terraform.rc
 
 /infra/export_terraform_secrets.sh
+/Trakfin/.env

@@ -8,6 +8,7 @@ terraform {
 }
 
 variable "subscription_id" {}
+variable "api_url" {}
 variable "mssql_admin_login" {}
 variable "mssql_admin_password" {}
 variable "mssql_connection_string" {}
@@ -23,6 +24,7 @@ resource "azurerm_resource_group" "rg" {
   name     = "Trakfin-RG"
   location = "westeurope"
 }
+
 
 resource "azurerm_container_registry" "acr_api" {
   name                = "TrakfinAPI"
@@ -54,6 +56,7 @@ resource "azurerm_user_assigned_identity" "assigned_id" {
   resource_group_name = azurerm_resource_group.rg.name
 }
 
+
 resource "azurerm_mssql_server" "trakfin" {
   name                         = "trakfinserver"
   resource_group_name          = azurerm_resource_group.rg.name
@@ -64,12 +67,6 @@ resource "azurerm_mssql_server" "trakfin" {
   minimum_tls_version          = "1.2"
 }
 
-resource "azurerm_mssql_firewall_rule" "firewall_rule" {
-  name             = "TrakfinFirewallRule1"
-  server_id        = azurerm_mssql_server.trakfin.id
-  start_ip_address = "0.0.0.0"
-  end_ip_address   = "0.0.0.0"
-}
 
 resource "azurerm_mssql_database" "db" {
   name                 = "TrakfinDB"
@@ -85,6 +82,7 @@ resource "azurerm_mssql_database" "db" {
     prevent_destroy = true
   }
 }
+
 
 data "azurerm_client_config" "current" {}
 
@@ -195,4 +193,52 @@ resource "azurerm_linux_web_app" "web_app" {
   }
 
   # Retrieve TrakfinContext variable from secrets
+}
+
+resource "azurerm_kubernetes_cluster" "aks_web" {
+  name                = "trakfin-web-aks"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  dns_prefix          = "trakfinweb"
+
+  default_node_pool {
+    name       = "default"
+    node_count = 1
+    vm_size    = "Standard_D2_v2"
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+resource "azurerm_role_assignment" "aks_web_ra" {
+  principal_id                     = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+  role_definition_name             = "AcrPull"
+  scope                            = azurerm_container_registry.acr_web.id
+  skip_service_principal_aad_check = true
+}
+
+resource "azurerm_kubernetes_cluster" "aks_api" {
+  name                = "trakfin-api-aks"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  dns_prefix          = "trakfinapi"
+
+  default_node_pool {
+    name       = "default"
+    node_count = 1
+    vm_size    = "Standard_D2_v2"
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+resource "azurerm_role_assignment" "aks_api_ra" {
+  principal_id                     = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+  role_definition_name             = "AcrPull"
+  scope                            = azurerm_container_registry.acr_api.id
+  skip_service_principal_aad_check = true
 }
