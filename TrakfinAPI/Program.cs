@@ -8,11 +8,17 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-        builder.Services.AddControllers();
         builder.Services.AddDbContext<TrakfinAPIContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("TrakfinContext") ?? throw new InvalidOperationException("Connection string 'TrakfinContext' not found.")));
+            options.UseSqlServer(builder.Configuration.GetConnectionString("TrakfinContext"), sqlServerOptionsAction: sql_opt =>
+            {
+                sql_opt.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(3),
+                    errorNumbersToAdd: null);
+            }));
+
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 

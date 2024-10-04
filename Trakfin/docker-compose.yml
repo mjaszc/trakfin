@@ -1,39 +1,81 @@
 services:
-  trakfinapi:
+  # PRODUCTION BUILD
+  trakfinapi_prod:
     image: ${DOCKER_REGISTRY-}trakfinapi
-    container_name: trakfin-api
+    container_name: trakfin-api-prod
     build:
       context: ../TrakfinAPI
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
     environment:
-      - ConnectionStrings__TrakfinContext=${CONNECTION_STRING}
+      - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
+    profiles: ["prod"]
 
-  # Local DB
-  # sql:
-  #   image: "mcr.microsoft.com/mssql/server:2022-latest"
-  #   container_name: sql_server2022
-  #   user: root
-  #   volumes:
-  #     - ./data-mssql:/var/opt/mssql/data
-  #   ports:
-  #     - "1433:1433"
-  #   environment:
-  #     - ACCEPT_EULA=y
-  #     - MSSQL_SA_PASSWORD=A&VeryComplex123Password
-  #     - ConnectionString=Server=sql_server2022;Database=trakfin;User Id=sa;Password=A&VeryComplex123Password;
-
-  trakfinweb:
+  trakfinweb_prod:
     image: ${DOCKER_REGISTRY-}trakfinweb
-    container_name: trakfin-web
+    container_name: trakfin-web-prod
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
     environment:
-      - ConnectionStrings__TrakfinContext=${CONNECTION_STRING}
-      - API_URL=${API_URL}
+      - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
+      - API_URL=${API_URL_PROD}
     depends_on:
-      - trakfinapi
+      - trakfinapi_prod
+    profiles: ["prod"]
+
+  # DEVELOPMENT BUILD
+  trakfinapi_dev:
+    image: ${DOCKER_REGISTRY-}trakfinapi
+    container_name: trakfin-api-dev
+    build:
+      context: ../TrakfinAPI
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_DEV}
+    profiles: ["dev"]
+
+  trakfinweb_dev:
+    image: ${DOCKER_REGISTRY-}trakfinweb
+    container_name: trakfin-web-dev
+    build:
+      context: ../Trakfin
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_DEV}
+      - API_URL=${API_URL_DEV}
+    depends_on:
+      - trakfinapi_dev
+    profiles: ["dev"]
+
+  sql:
+    image: "mcr.microsoft.com/mssql/server:2022-latest"
+    container_name: sql_server2022
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=y
+      - SA_PASSWORD=A&VeryComplex123Password
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'A&VeryComplex123Password' -Q -C 'SELECT 1' || exit 1",
+        ]
+      interval: 10s
+      retries: 10
+      start_period: 10s
+      timeout: 3s
+    profiles: ["dev"]
+
+volumes:
+  sqlserver_data:

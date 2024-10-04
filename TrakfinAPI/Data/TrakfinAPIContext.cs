@@ -10,7 +10,19 @@ namespace TrakfinAPI.Data
         public TrakfinAPIContext(DbContextOptions<TrakfinAPIContext> options)
             : base(options)
         {
-            Database.Migrate();
+            var dbCreator = Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator;
+            if (dbCreator != null)
+            {
+                if (!dbCreator.CanConnect())
+                {
+                    dbCreator.Create();
+                }
+
+                if (!dbCreator.HasTables())
+                {
+                    dbCreator.CreateTables();
+                }
+            }
         }
 
         public DbSet<Expense> Expense { get; set; } = default!;

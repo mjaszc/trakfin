@@ -7,8 +7,15 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
         builder.Services.AddDbContext<TrakfinContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("TrakfinContext") ?? throw new InvalidOperationException("Connection string 'TrakfinContext' not found.")));
+            options.UseSqlServer(builder.Configuration.GetConnectionString("TrakfinContext"), sqlServerOptionsAction: sql_opt =>
+            {
+                sql_opt.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(3),
+                    errorNumbersToAdd: null);
+            }));
 
         builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<TrakfinContext>();
 
