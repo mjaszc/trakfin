@@ -1,58 +1,109 @@
 services:
   # PRODUCTION BUILD
-  trakfinapi_prod:
-    image: ${DOCKER_REGISTRY-}trakfinapi
-    container_name: trakfin-api-prod
-    build:
-      context: ../TrakfinAPI
-      dockerfile: Dockerfile
+  reverseproxyprod:
+    image: traefik:v3.1
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--api.debug=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
     ports:
+      - "80:80"
+      # Web UI port
       - "8080:8080"
-    environment:
-      - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
+      - "443:443"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
     profiles: ["prod"]
 
-  trakfinweb_prod:
+  trakfinwebprod:
     image: ${DOCKER_REGISTRY-}trakfinweb
-    container_name: trakfin-web-prod
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.trakfinwebprod.rule=Host(`${TRAEFIK_WEB_URL_PROD}`)"
+      - "traefik.http.routers.trakfinwebprod.entrypoints=web"
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
     ports:
-      - "8081:8081"
+      - "8082:8082"
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
       - API_URL=${API_URL_PROD}
     depends_on:
-      - trakfinapi_prod
+      - trakfinapiprod
     profiles: ["prod"]
 
-  # DEVELOPMENT BUILD
-  trakfinapi_dev:
+  trakfinapiprod:
     image: ${DOCKER_REGISTRY-}trakfinapi
-    container_name: trakfin-api-dev
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.trakfinapiprod.rule=Host(`${TRAEFIK_API_URL_PROD}`)"
+      - "traefik.http.routers.trakfinapiprod.entrypoints=web"
     build:
       context: ../TrakfinAPI
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8081:8081"
     environment:
-      - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_DEV}
+      - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
+    profiles: ["prod"]
+
+  # DEVELOPMENT BUILD
+  reverseproxydev:
+    image: traefik:v3.1
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--api.debug=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      # Web UI port
+      - "8080:8080"
+      - "443:443"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
     profiles: ["dev"]
 
-  trakfinweb_dev:
-    image: ${DOCKER_REGISTRY-}trakfinweb
-    container_name: trakfin-web-dev
+  trakfinapidev:
+    image: ${DOCKER_REGISTRY-}trakfinapi
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.trakfinapidev.rule=Host(`${TRAEFIK_API_URL_DEV}`)"
+      - "traefik.http.routers.trakfinapidev.entrypoints=web"
     build:
-      context: ../Trakfin
+      context: ../TrakfinAPI
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_DEV}
+    profiles: ["dev"]
+
+  trakfinwebdev:
+    image: ${DOCKER_REGISTRY-}trakfinweb
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.trakfinapiprod.rule=Host(`${TRAEFIK_WEB_URL_DEV}`)"
+      - "traefik.http.routers.trakfinapiprod.entrypoints=web"
+    build:
+      context: ../Trakfin
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_DEV}
       - API_URL=${API_URL_DEV}
     depends_on:
-      - trakfinapi_dev
+      - trakfinapidev
+      - sql
     profiles: ["dev"]
 
   sql:

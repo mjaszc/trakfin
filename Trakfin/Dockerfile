@@ -5,10 +5,10 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS base
 USER app
 WORKDIR /app
 
-ENV ASPNETCORE_HTTP_PORTS=8081
+ENV ASPNETCORE_HTTP_PORTS=8082
 ENV ASPNETCORE_ENVIRONMENT=Development
 
-EXPOSE 8081
+EXPOSE 8082
 
 
 # This stage is used to build the service project
