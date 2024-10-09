@@ -28,8 +28,6 @@ services:
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
-    ports:
-      - "8082:8082"
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
       - API_URL=${API_URL_PROD}
@@ -46,8 +44,6 @@ services:
     build:
       context: ../TrakfinAPI
       dockerfile: Dockerfile
-    ports:
-      - "8081:8081"
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
     profiles: ["prod"]
@@ -81,8 +77,6 @@ services:
     build:
       context: ../TrakfinAPI
       dockerfile: Dockerfile
-    ports:
-      - "8081:8081"
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_DEV}
     profiles: ["dev"]
@@ -96,8 +90,6 @@ services:
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
-    ports:
-      - "8082:8082"
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_DEV}
       - API_URL=${API_URL_DEV}
