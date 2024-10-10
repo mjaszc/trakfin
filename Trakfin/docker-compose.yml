@@ -30,7 +30,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.trakfinwebprod.rule=Host(`${TRAEFIK_WEB_URL_PROD}`)"
       - "traefik.http.routers.trakfinwebprod.entrypoints=websecure"
-      - "traefik.http.routers.trakfinwebprod.tls.certificateresolver=resolver"
+      - "traefik.http.routers.trakfinwebprod.tls.certresolver=resolver"
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
@@ -50,7 +50,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.trakfinapiprod.rule=Host(`${TRAEFIK_API_URL_PROD}`)"
       - "traefik.http.routers.trakfinapiprod.entrypoints=websecure"
-      - "traefik.http.routers.trakfinapiprod.tls.certificateresolver=resolver"
+      - "traefik.http.routers.trakfinapiprod.tls.certresolver=resolver"
     build:
       context: ../TrakfinAPI
       dockerfile: Dockerfile
