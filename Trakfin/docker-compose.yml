@@ -1,5 +1,15 @@
 services:
   # PRODUCTION BUILD
+  watchtowerprod:
+    image: containrrr/watchtower
+    command:
+      - "--label-enable"
+      - "--interval"
+      - "30"
+      - "--rolling-restart"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
   reverseproxyprod:
     image: traefik:v3.1
     command:
@@ -8,8 +18,14 @@ services:
       - "--api.debug=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.resolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.resolver.acme.email=${CERTIFICATE_EMAIL}"
+      - "--certificatesresolvers.resolver.acme.storage=/letsencrypt/acme.json"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--certificatesresolvers.resolver.acme.tlschallenge=true"
       - "--certificatesresolvers.resolver.acme.email=${CERTIFICATE_EMAIL}"
       - "--certificatesresolvers.resolver.acme.storage=/letsencrypt/acme.json"
@@ -39,6 +55,9 @@ services:
     deploy:
       mode: replicated
       replicas: 2
+    deploy:
+      mode: replicated
+      replicas: 2
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
       - API_URL=${API_URL_PROD}
@@ -53,9 +72,13 @@ services:
       - "traefik.http.routers.trakfinapiprod.rule=Host(`${TRAEFIK_API_URL_PROD}`)"
       - "traefik.http.routers.trakfinapiprod.entrypoints=websecure"
       - "traefik.http.routers.trakfinapiprod.tls.certresolver=resolver"
+      - "com.centurylinklabs.watchtower.enable=true"
     build:
       context: ../TrakfinAPI
       dockerfile: Dockerfile
+    deploy:
+      mode: replicated
+      replicas: 2
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
     profiles: ["prod"]
