@@ -18,8 +18,14 @@ services:
       - "--api.debug=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.resolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.resolver.acme.email=${CERTIFICATE_EMAIL}"
+      - "--certificatesresolvers.resolver.acme.storage=/letsencrypt/acme.json"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--certificatesresolvers.resolver.acme.tlschallenge=true"
       - "--certificatesresolvers.resolver.acme.email=${CERTIFICATE_EMAIL}"
       - "--certificatesresolvers.resolver.acme.storage=/letsencrypt/acme.json"
@@ -43,10 +49,12 @@ services:
       - "traefik.http.routers.trakfinwebprod.rule=Host(`${TRAEFIK_WEB_URL_PROD}`)"
       - "traefik.http.routers.trakfinwebprod.entrypoints=websecure"
       - "traefik.http.routers.trakfinwebprod.tls.certresolver=resolver"
-      - "com.centurylinklabs.watchtower.enable=true"
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
+    deploy:
+      mode: replicated
+      replicas: 2
     deploy:
       mode: replicated
       replicas: 2
