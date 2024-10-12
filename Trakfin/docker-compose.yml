@@ -26,15 +26,8 @@ services:
       - "--certificatesresolvers.resolver.acme.storage=/letsencrypt/acme.json"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      - "--certificatesresolvers.resolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.resolver.acme.email=${CERTIFICATE_EMAIL}"
-      - "--certificatesresolvers.resolver.acme.storage=/letsencrypt/acme.json"
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
     ports:
       - "80:80"
-      # Web UI port
-      - "8080:8080"
       - "443:443"
     volumes:
       - letsencrypt:/letsencrypt
@@ -52,9 +45,6 @@ services:
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
-    deploy:
-      mode: replicated
-      replicas: 2
     deploy:
       mode: replicated
       replicas: 2
