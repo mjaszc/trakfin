@@ -23,8 +23,8 @@ jobs:
 
       - name: Tag and Push TrakfinAPI Docker Image to Docker Hub
         run: |
-          docker tag trakfinapi ${{ secrets.DOCKERHUB_USERNAME }}/trakfinapi:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/trakfinapi:latest
+          docker tag trakfinapi ${{ secrets.DOCKERHUB_USERNAME }}/trakfinapi:${{ secrets.TRAKFINAPI_VERSION }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/trakfinapi:${{ secrets.TRAKFINAPI_VERSION }}
 
       - name: Build Trakfin Web Docker Image
         run: |
@@ -33,5 +33,5 @@ jobs:
 
       - name: Tag and Push Trakfin Web Docker Image to Docker Hub
         run: |
-          docker tag trakfinweb ${{ secrets.DOCKERHUB_USERNAME }}/trakfinweb:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/trakfinweb:latest
+          docker tag trakfinweb ${{ secrets.DOCKERHUB_USERNAME }}/trakfinweb:${{ secrets.TRAKFINWEB_VERSION }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/trakfinweb:${{ secrets.TRAKFINWEB_VERSION }}
