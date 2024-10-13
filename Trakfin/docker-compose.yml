@@ -66,9 +66,6 @@ services:
     build:
       context: ../TrakfinAPI
       dockerfile: Dockerfile
-    deploy:
-      mode: replicated
-      replicas: 2
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
     profiles: ["prod"]
