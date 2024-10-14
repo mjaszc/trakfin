@@ -18,7 +18,6 @@ services:
       - "--api.debug=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.resolver.acme.tlschallenge=true"
