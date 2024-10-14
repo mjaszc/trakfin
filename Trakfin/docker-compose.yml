@@ -9,6 +9,7 @@ services:
       - "--rolling-restart"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    profiles: ["prod"]
 
   reverseproxyprod:
     image: traefik:v3.1
@@ -35,12 +36,13 @@ services:
     profiles: ["prod"]
 
   trakfinwebprod:
-    image: jasmar2/trakfinweb:${TRAKFINWEB_IMAGE_TAG}
+    image: ${DOCKER_REGISTRY-}trakfinweb
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.trakfinwebprod.rule=Host(`${TRAEFIK_WEB_URL_PROD}`)"
       - "traefik.http.routers.trakfinwebprod.entrypoints=websecure"
       - "traefik.http.routers.trakfinwebprod.tls.certresolver=resolver"
+      - "com.centurylinklabs.watchtower.enable=true"
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
@@ -55,7 +57,7 @@ services:
     profiles: ["prod"]
 
   trakfinapiprod:
-    image: jasmar2/trakfinapi:${TRAKFINAPI_IMAGE_TAG}
+    image: ${DOCKER_REGISTRY-}trakfinapi
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.trakfinapiprod.rule=Host(`${TRAEFIK_API_URL_PROD}`)"
@@ -79,6 +81,7 @@ services:
       - "--providers.docker=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--providers.docker.exposedbydefault=false"
     ports:
       - "80:80"
       # Web UI port
