@@ -28,6 +28,7 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
     ports:
       - "80:80"
+      - "8080:8080"
       - "443:443"
     volumes:
       - letsencrypt:/letsencrypt
@@ -36,19 +37,15 @@ services:
     profiles: ["prod"]
 
   trakfinwebprod:
-    image: ${DOCKER_REGISTRY-}trakfinweb
+    image: jasmar2/trakfinweb:${TRAKFINWEB_IMAGE_TAG}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.trakfinwebprod.rule=Host(`${TRAEFIK_WEB_URL_PROD}`)"
       - "traefik.http.routers.trakfinwebprod.entrypoints=websecure"
       - "traefik.http.routers.trakfinwebprod.tls.certresolver=resolver"
-      - "com.centurylinklabs.watchtower.enable=true"
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
-    deploy:
-      mode: replicated
-      replicas: 2
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
       - API_URL=${API_URL_PROD}
@@ -57,13 +54,12 @@ services:
     profiles: ["prod"]
 
   trakfinapiprod:
-    image: ${DOCKER_REGISTRY-}trakfinapi
+    image: jasmar2/trakfinapi:${TRAKFINAPI_IMAGE_TAG}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.trakfinapiprod.rule=Host(`${TRAEFIK_API_URL_PROD}`)"
       - "traefik.http.routers.trakfinapiprod.entrypoints=websecure"
       - "traefik.http.routers.trakfinapiprod.tls.certresolver=resolver"
-      - "com.centurylinklabs.watchtower.enable=true"
     build:
       context: ../TrakfinAPI
       dockerfile: Dockerfile
