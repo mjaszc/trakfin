@@ -2,40 +2,19 @@
 
 namespace Trakfin.Middlewares
 {
-    // create handler
     class CancelledTaskBugWorkaroundMessageHandler : DelegatingHandler
     {
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
-            CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            try
-            {
-                HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
-                // Try to suppress response content when the cancellation token has fired; ASP.NET will log to the Application event log if there's content in this case.
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return new HttpResponseMessage(HttpStatusCode.OK);
-                }
+            HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
 
-                return response;
-
-            }
-            catch (Exception ex)
+            // Try to suppress response content when the cancellation token has fired; ASP.NET will log to the Application event log if there's content in this case.
+            if (cancellationToken.IsCancellationRequested)
             {
-                if (IsAspNetBugException(ex))
-                    return new HttpResponseMessage(HttpStatusCode.OK);
                 return new HttpResponseMessage(HttpStatusCode.InternalServerError);
             }
 
-
-        }
-
-        private static bool IsAspNetBugException(Exception exception)
-        {
-            return
-                (exception is TaskCanceledException || exception is OperationCanceledException)
-                &&
-                exception.StackTrace.Contains("System.Web.HttpApplication.ExecuteStep");
+            return response;
         }
     }
 }
