@@ -18,7 +18,7 @@ services:
       - "--api.dashboard=true"
       - "--api.debug=true"
       - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.exposedbydefault=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.resolver.acme.tlschallenge=true"
@@ -36,13 +36,12 @@ services:
     profiles: ["prod"]
 
   trakfinwebprod:
-    image: ${DOCKER_REGISTRY-}trakfinweb
+    image: jasmar2/trakfinweb:${TRAKFINWEB_IMAGE_TAG}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.trakfinwebprod.rule=Host(`${TRAEFIK_WEB_URL_PROD}`)"
       - "traefik.http.routers.trakfinwebprod.entrypoints=websecure"
       - "traefik.http.routers.trakfinwebprod.tls.certresolver=resolver"
-      - "com.centurylinklabs.watchtower.enable=true"
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
@@ -57,13 +56,12 @@ services:
     profiles: ["prod"]
 
   trakfinapiprod:
-    image: ${DOCKER_REGISTRY-}trakfinapi
+    image: jasmar2/trakfinapi:${TRAKFINAPI_IMAGE_TAG}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.trakfinapiprod.rule=Host(`${TRAEFIK_API_URL_PROD}`)"
       - "traefik.http.routers.trakfinapiprod.entrypoints=websecure"
       - "traefik.http.routers.trakfinapiprod.tls.certresolver=resolver"
-      - "com.centurylinklabs.watchtower.enable=true"
     build:
       context: ../TrakfinAPI
       dockerfile: Dockerfile
