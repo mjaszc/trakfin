@@ -5,7 +5,8 @@ namespace Trakfin.Middlewares
     // create handler
     class CancelledTaskBugWorkaroundMessageHandler : DelegatingHandler
     {
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -15,6 +16,7 @@ namespace Trakfin.Middlewares
                 {
                     return new HttpResponseMessage(HttpStatusCode.OK);
                 }
+
                 return response;
 
             }
@@ -27,6 +29,7 @@ namespace Trakfin.Middlewares
 
 
         }
+
         private static bool IsAspNetBugException(Exception exception)
         {
             return
@@ -35,3 +38,4 @@ namespace Trakfin.Middlewares
                 exception.StackTrace.Contains("System.Web.HttpApplication.ExecuteStep");
         }
     }
+}
