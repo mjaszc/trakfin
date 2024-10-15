@@ -18,7 +18,7 @@ services:
       - "--api.dashboard=true"
       - "--api.debug=true"
       - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=true"
+      - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.resolver.acme.tlschallenge=true"
@@ -28,6 +28,7 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
     ports:
       - "80:80"
+      - "8080:8080"
       - "443:443"
     volumes:
       - letsencrypt:/letsencrypt
@@ -45,9 +46,6 @@ services:
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
-    deploy:
-      mode: replicated
-      replicas: 2
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
       - API_URL=${API_URL_PROD}
