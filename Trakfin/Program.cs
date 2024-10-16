@@ -43,7 +43,7 @@ public class Program
 
         app.UseAuthorization();
 
-        app.UseMiddleware<CancelledTaskBugWorkaroundMiddleware>();
+        // app.UseMiddleware<CancelledTaskBugWorkaroundMiddleware>();
 
         app.MapControllerRoute(
             name: "default",

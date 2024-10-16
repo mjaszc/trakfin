@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Trakfin.Data;
 using Trakfin.Models;
 
 namespace Trakfin.Controllers
@@ -11,8 +10,9 @@ namespace Trakfin.Controllers
         private readonly IConfiguration _config;
         private readonly HttpClient _client;
         private readonly Uri _baseAddress;
+        private readonly ILogger<BudgetsController> _logger;
 
-        public BudgetsController(IConfiguration config)
+        public BudgetsController(IConfiguration config, ILogger<BudgetsController> logger)
         {
             _config = config;
             _baseAddress = new Uri(_config["API_URL"] ?? throw new ArgumentNullException(_config["API_URL"]));
@@ -20,6 +20,7 @@ namespace Trakfin.Controllers
             {
                 BaseAddress = _baseAddress
             };
+            _logger = logger;
         }
 
         // GET: Budgets
@@ -27,12 +28,25 @@ namespace Trakfin.Controllers
         public async Task<IActionResult> Index()
         {
             List<Budget>? budgetList = [];
-            var response = await _client.GetAsync(_client.BaseAddress + "/Budgets");
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var data = response.Content.ReadAsStringAsync().Result;
-                budgetList = JsonConvert.DeserializeObject<List<Budget>>(data);
+                _logger.LogInformation("Starting to get budgets from API.");
+                var response = await _client.GetAsync(_client.BaseAddress + "/Budgets");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = response.Content.ReadAsStringAsync().Result;
+                    budgetList = JsonConvert.DeserializeObject<List<Budget>>(data);
+                    _logger.LogInformation($"Successfully retrieved {budgetList!.Count} budgets.");
+                }
+                else
+                {
+                    _logger.LogWarning($"Failed to get budgets from API. Status code: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"An error occurred while getting budgets from API {ex.Message}");
             }
 
             return View(budgetList);
