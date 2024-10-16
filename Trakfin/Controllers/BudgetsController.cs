@@ -31,9 +31,11 @@ namespace Trakfin.Controllers
             List<Budget>? budgetList = [];
             try
             {
+                HttpClient client = new();
+                client.Timeout = TimeSpan.FromMinutes(3);
+
                 _logger.LogInformation("Starting to get budgets from API.");
-                var response = await _client.GetAsync($"{_client.BaseAddress}/Budgets");
-                _client.Timeout = TimeSpan.MaxValue;
+                var response = await client.GetAsync(_baseAddress + "/Budgets");
 
                 if (response.IsSuccessStatusCode)
                 {
