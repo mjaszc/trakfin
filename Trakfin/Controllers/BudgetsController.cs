@@ -32,7 +32,7 @@ namespace Trakfin.Controllers
             try
             {
                 _logger.LogInformation("Starting to get budgets from API.");
-                var response = await _client.GetAsync(_client.BaseAddress + "/Budgets");
+                var response = await _client.GetAsync($"{_client.BaseAddress}/Budgets");
                 _client.Timeout = TimeSpan.MaxValue;
 
                 if (response.IsSuccessStatusCode)
