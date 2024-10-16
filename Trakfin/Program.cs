@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Trakfin.Data;
 using Microsoft.AspNetCore.Identity;
-using Trakfin.Middlewares;
 
 public class Program
 {

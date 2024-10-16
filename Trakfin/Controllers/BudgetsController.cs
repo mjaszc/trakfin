@@ -31,15 +31,13 @@ namespace Trakfin.Controllers
             List<Budget>? budgetList = [];
             try
             {
-                var client = new HttpClient { BaseAddress = _baseAddress};
-
                 _logger.LogInformation("Starting to get budgets from API.");
-                var response = await _client.GetAsync(client.BaseAddress + "/Budgets");
-                client.Timeout = TimeSpan.MaxValue;
+                var response = await _client.GetAsync(_client.BaseAddress + "/Budgets");
+                _client.Timeout = TimeSpan.MaxValue;
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var data = response.Content.ReadAsStringAsync().Result;
+                    var data = await response.Content.ReadAsStringAsync();
                     budgetList = JsonConvert.DeserializeObject<List<Budget>>(data);
                     _logger.LogInformation($"Successfully retrieved {budgetList!.Count} budgets");
                 }
