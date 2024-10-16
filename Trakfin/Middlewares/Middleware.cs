@@ -1,32 +1,42 @@
 ﻿using System.Net;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
 namespace Trakfin.Middlewares
 {
-    // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
-    class CancelledTaskBugWorkaroundMessageHandler : DelegatingHandler
+    class CancelledTaskBugWorkaroundMiddleware
     {
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        private readonly RequestDelegate _next;
+
+        public CancelledTaskBugWorkaroundMiddleware(RequestDelegate next)
         {
+            _next = next;
+        }
+
+        public async Task InvokeAsync(HttpContext context)
+        {
+            var cts = new CancellationTokenSource();
+            var token = cts.Token;
+
             try
             {
-                HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
-                // Try to suppress response content when the cancellation token has fired; ASP.NET will log to the Application event log if there's content in this case.
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return new HttpResponseMessage(HttpStatusCode.OK);
-                }
-                return response;
+                await _next(context);
 
+                if (token.IsCancellationRequested)
+                {
+                    context.Response.StatusCode = (int)HttpStatusCode.OK;
+                    return;
+                }
             }
             catch (Exception ex)
             {
                 if (IsAspNetBugException(ex))
-                    return new HttpResponseMessage(HttpStatusCode.OK);
-                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                    context.Response.StatusCode = (int)HttpStatusCode.OK;
+                else
+                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             }
-
-
         }
+
         private static bool IsAspNetBugException(Exception exception)
         {
             return
