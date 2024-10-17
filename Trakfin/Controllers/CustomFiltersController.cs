@@ -31,7 +31,7 @@ namespace Trakfin.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                var data = response.Content.ReadAsStringAsync().Result;
+                var data = await response.Content.ReadAsStringAsync();
                 filterList = JsonConvert.DeserializeObject<List<CustomFilter>>(data);
             }
 
@@ -52,7 +52,7 @@ namespace Trakfin.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                var data = response.Content.ReadAsStringAsync().Result;
+                var data = await response.Content.ReadAsStringAsync();
                 filter = JsonConvert.DeserializeObject<CustomFilter>(data);
             }
 
@@ -108,7 +108,7 @@ namespace Trakfin.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                string data = response.Content.ReadAsStringAsync().Result;
+                string data = await response.Content.ReadAsStringAsync();
                 budget = JsonConvert.DeserializeObject<CustomFilter>(data);
             }
 
@@ -168,7 +168,7 @@ namespace Trakfin.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                var data = response.Content.ReadAsStringAsync().Result;
+                var data = await response.Content.ReadAsStringAsync();
                 filter = JsonConvert.DeserializeObject<CustomFilter>(data);
             }
 

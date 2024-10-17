@@ -45,7 +45,7 @@ namespace Trakfin.Controllers
 
             // Tasks to perform before the page loads
             var bankListTask = GetBankNames();
-            var categoryListTask = GetCategory(); 
+            var categoryListTask = GetCategory();
             var expensesTask = FilterExpenses(searchString, bankName, categoryName, startDate, endDate); // Responsible for displaying expenses on the Index page
             var customFiltersTask = GetCustomFilters();
             var recurringTransactionsTask = FilterRecurringTransactions(searchString, bankName, categoryName);
@@ -424,7 +424,7 @@ namespace Trakfin.Controllers
 
             Expense? expense = null;
             var response = await _client.GetAsync(_client.BaseAddress + $"/Expenses/{id}");
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 TempData["ErrorMessage"] = "Expense not found.";
@@ -502,7 +502,7 @@ namespace Trakfin.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                var data = response.Content.ReadAsStringAsync().Result;
+                var data = await response.Content.ReadAsStringAsync();
                 expense = JsonConvert.DeserializeObject<Expense>(data);
             }
             else
