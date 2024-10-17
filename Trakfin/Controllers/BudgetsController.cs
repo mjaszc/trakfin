@@ -26,31 +26,28 @@ namespace Trakfin.Controllers
 
         // GET: Budgets
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(CancellationToken ct)
         {
             List<Budget>? budgetList = [];
             try
             {
-                HttpClient client = new();
-                client.Timeout = TimeSpan.FromMinutes(3);
-
                 _logger.LogInformation("Starting to get budgets from API.");
-                var response = await client.GetAsync(_baseAddress + "/Budgets");
+                var response = await _client.GetAsync(_client.BaseAddress + "/Budgets", ct);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var data = await response.Content.ReadAsStringAsync();
                     budgetList = JsonConvert.DeserializeObject<List<Budget>>(data);
-                    _logger.LogInformation($"Successfully retrieved {budgetList!.Count} budgets");
+                    _logger.LogInformation($"Successfully retrieved.");
                 }
                 else
                 {
                     _logger.LogWarning($"Failed to get budgets from API. Status code: {response.StatusCode}");
                 }
             }
-            catch (Exception ex)
+            catch (OperationCanceledException)
             {
-                _logger.LogError($"An error occurred while getting budgets from API {ex.Message}");
+                _logger.LogError($"Task cancelled");
             }
 
             return View(budgetList);

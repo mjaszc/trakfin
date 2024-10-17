@@ -1,6 +1,4 @@
 ﻿using System.Net;
-using Microsoft.AspNetCore.Http;
-using System.Threading.Tasks;
 
 namespace Trakfin.Middlewares
 {
@@ -40,7 +38,7 @@ namespace Trakfin.Middlewares
         private static bool IsAspNetBugException(Exception exception)
         {
             return
-                (exception is TaskCanceledException || exception is OperationCanceledException)
+                (exception is OperationCanceledException)
                 &&
                 exception.StackTrace.Contains("System.Web.HttpApplication.ExecuteStep");
         }
