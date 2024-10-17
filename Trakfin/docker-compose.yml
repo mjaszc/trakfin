@@ -9,6 +9,7 @@ services:
       - "--rolling-restart"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    profiles: ["prod"]
 
   reverseproxyprod:
     image: traefik:v3.1
@@ -27,6 +28,7 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
     ports:
       - "80:80"
+      - "8080:8080"
       - "443:443"
     volumes:
       - letsencrypt:/letsencrypt
@@ -44,9 +46,6 @@ services:
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
-    deploy:
-      mode: replicated
-      replicas: 2
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
       - API_URL=${API_URL_PROD}
@@ -61,7 +60,6 @@ services:
       - "traefik.http.routers.trakfinapiprod.rule=Host(`${TRAEFIK_API_URL_PROD}`)"
       - "traefik.http.routers.trakfinapiprod.entrypoints=websecure"
       - "traefik.http.routers.trakfinapiprod.tls.certresolver=resolver"
-      - "com.centurylinklabs.watchtower.enable=true"
     build:
       context: ../TrakfinAPI
       dockerfile: Dockerfile
@@ -79,6 +77,7 @@ services:
       - "--providers.docker=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--providers.docker.exposedbydefault=false"
     ports:
       - "80:80"
       # Web UI port

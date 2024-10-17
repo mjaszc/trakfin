@@ -8,7 +8,7 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddDbContext<TrakfinAPIContext>(options =>
+        builder.Services.AddDbContextFactory<TrakfinAPIContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("TrakfinContext"), sqlServerOptionsAction: sql_opt =>
             {
                 sql_opt.EnableRetryOnFailure(

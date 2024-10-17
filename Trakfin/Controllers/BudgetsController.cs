@@ -1,7 +1,7 @@
-﻿using System.Text;
+﻿using System.Net.Http;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Trakfin.Data;
 using Trakfin.Models;
 
 namespace Trakfin.Controllers
@@ -31,7 +31,7 @@ namespace Trakfin.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                var data = response.Content.ReadAsStringAsync().Result;
+                var data = await response.Content.ReadAsStringAsync();
                 budgetList = JsonConvert.DeserializeObject<List<Budget>>(data);
             }
 
