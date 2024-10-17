@@ -11,9 +11,8 @@ namespace Trakfin.Controllers
         private readonly IConfiguration _config;
         private readonly HttpClient _client;
         private readonly Uri _baseAddress;
-        private readonly ILogger<BudgetsController> _logger;
 
-        public BudgetsController(IConfiguration config, ILogger<BudgetsController> logger)
+        public BudgetsController(IConfiguration config)
         {
             _config = config;
             _baseAddress = new Uri(_config["API_URL"] ?? throw new ArgumentNullException(_config["API_URL"]));
@@ -21,33 +20,19 @@ namespace Trakfin.Controllers
             {
                 BaseAddress = _baseAddress
             };
-            _logger = logger;
         }
 
         // GET: Budgets
         [HttpGet]
-        public async Task<IActionResult> Index(CancellationToken ct)
+        public async Task<IActionResult> Index()
         {
             List<Budget>? budgetList = [];
-            try
-            {
-                _logger.LogInformation("Starting to get budgets from API.");
-                var response = await _client.GetAsync(_client.BaseAddress + "/Budgets", ct);
+            var response = await _client.GetAsync(_client.BaseAddress + "/Budgets");
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var data = await response.Content.ReadAsStringAsync();
-                    budgetList = JsonConvert.DeserializeObject<List<Budget>>(data);
-                    _logger.LogInformation($"Successfully retrieved.");
-                }
-                else
-                {
-                    _logger.LogWarning($"Failed to get budgets from API. Status code: {response.StatusCode}");
-                }
-            }
-            catch (OperationCanceledException)
+            if (response.IsSuccessStatusCode)
             {
-                _logger.LogError($"Task cancelled");
+                var data = await response.Content.ReadAsStringAsync();
+                budgetList = JsonConvert.DeserializeObject<List<Budget>>(data);
             }
 
             return View(budgetList);

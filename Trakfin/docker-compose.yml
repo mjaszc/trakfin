@@ -63,6 +63,8 @@ services:
     build:
       context: ../TrakfinAPI
       dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_PROD}
     profiles: ["prod"]
