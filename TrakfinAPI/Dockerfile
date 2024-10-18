@@ -1,9 +1,7 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER app
 
-ENV ASPNETCORE_HTTP_PORTS=8081
 ENV ASPNETCORE_ENVIRONMENT=Development
-EXPOSE 8081
 
 WORKDIR /app
 
