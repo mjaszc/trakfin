@@ -77,6 +77,15 @@ namespace TrakfinAPI.Controllers
         public async Task<IActionResult> DeleteBudget(int id)
         {
             var budget = await context.Budget.FindAsync(id);
+            var relatedExpenses = await context.Expense
+                .Where(e => e.BudgetId == id)
+                .ToListAsync();
+
+            foreach (var expense in relatedExpenses)
+            {
+                expense.BudgetId = null;
+            }
+
             if (budget == null)
             {
                 return NotFound();

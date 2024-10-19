@@ -75,7 +75,6 @@ services:
       - "--api.debug=true"
       - "--providers.docker=true"
       - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
       - "--providers.docker.exposedbydefault=false"
     ports:
       - "80:80"
@@ -98,14 +97,15 @@ services:
       dockerfile: Dockerfile
     environment:
       - ConnectionStrings__TrakfinContext=${CONNECTION_STRING_DEV}
+      - ASPNETCORE_HTTP_PORTS=8081
     profiles: ["dev"]
 
   trakfinwebdev:
     image: ${DOCKER_REGISTRY-}trakfinweb
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.trakfinapiprod.rule=Host(`${TRAEFIK_WEB_URL_DEV}`)"
-      - "traefik.http.routers.trakfinapiprod.entrypoints=web"
+      - "traefik.http.routers.trakfinwebdev.rule=Host(`${TRAEFIK_WEB_URL_DEV}`)"
+      - "traefik.http.routers.trakfinwebdev.entrypoints=web"
     build:
       context: ../Trakfin
       dockerfile: Dockerfile
